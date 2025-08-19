@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>それ、売上に直すといくらですか？</title>
+  <meta name="theme-color" content="#2f7f86" />
+  <style>
+    :root{
+      /* 添付スクショの青緑系トーン */
+      --bg:#f4f9fb;
+      --card:#ffffff;
+      --ink:#1e2a2d;
+      --muted:#5a6a6d;
+      --accent:#2f7f86;
+      --accent-2:#4ea4ad;
+      --shadow:0 10px 30px rgba(35,80,90,.12);
+      --radius:16px;
+    }
+    html,body{height:100%;}
+    body{
+      margin:0;
+      font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN",
+        "Yu Gothic UI","YuGothic","Noto Sans JP","Segoe UI",Roboto,Arial,sans-serif;
+      background:var(--bg); color:var(--ink);
+      -webkit-font-smoothing:antialiased;
+    }
+    .wrap{
+      padding:max(12px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right))
+              calc(16px + env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
+      max-width:560px; margin:0 auto;
+    }
+    header{padding:14px 10px 2px;}
+    .title{font-weight:800; letter-spacing:.02em; line-height:1.25;
+      font-size:clamp(20px,5.5vw,26px); margin:0 0 6px;}
+    .subtitle{color:var(--muted); font-size:12px;}
+    .card{background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow);
+      padding:18px 16px; margin:12px 0 18px;}
+    .field{margin:10px 0 16px;}
+    .label{font-size:15px; color:var(--muted); margin:0 0 6px 2px;}
+    .label.big{font-size:16px; font-weight:700; color:#324245;}
+    .helper{font-size:12px; color:#6a7a7d; margin:4px 2px 0;}
+    /* 金額入力 */
+    .yen-input{display:flex; align-items:center; gap:8px; background:#f8fcfd;
+      border:1px solid #d9eaed; border-radius:12px; padding:10px 12px;}
+    .yen-input .prefix{font-weight:700; color:var(--accent); border-right:1px solid #e6f1f3; padding-right:10px;}
+    input[type="text"].money{flex:1; border:0; outline:none; background:transparent;
+      font-size:22px; font-weight:800; color:var(--ink); letter-spacing:.02em;}
+    /* スライダー（共通） */
+    .range-row{display:flex; align-items:center; gap:12px; padding:8px 0;}
+    input[type="range"]{-webkit-appearance:none; width:100%; height:26px; background:transparent;}
+    input[type="range"]::-webkit-slider-runnable-track{
+      height:6px; background:linear-gradient(90deg,var(--accent-2),var(--accent)); border-radius:999px;}
+    input[type="range"]::-webkit-slider-thumb{
+      -webkit-appearance:none; width:26px; height:26px; border-radius:50%;
+      background:#fff; border:2px solid var(--accent); margin-top:-10px; box-shadow:0 1px 6px rgba(0,0,0,.08);}
+    .pct,.yen{min-width:92px; text-align:right; font-feature-settings:"tnum"; font-variant-numeric:tabular-nums; font-weight:800; font-size:16px;}
+    .chip-row{display:flex; gap:8px; flex-wrap:wrap; margin-top:6px;}
+    .chip{border:1px solid #d9eaed; color:var(--accent); background:#f3fafb;
+      padding:6px 10px; border-radius:999px; font-size:12px;}
+    .chip button{all:unset; cursor:pointer;}
+    .btn{background:linear-gradient(180deg,var(--accent-2),var(--accent)); color:#fff; font-weight:900;
+      letter-spacing:.02em; border:0; width:100%; border-radius:12px; padding:16px 18px; font-size:17px; box-shadow:var(--shadow);}
+    .btn:active{transform:translateY(1px);}
+    .btn.secondary{background:#eef7f8; color:var(--accent); box-shadow:none; border:1px solid #d9eaed;}
+    .result{text-align:center; margin-top:16px;}
+    .result .label{font-size:16px; font-weight:800; color:#324245;}
+    .amount{font-size:clamp(24px,7.5vw,36px); font-weight:900; color:var(--accent);
+      margin:8px 0 6px; font-feature-settings:"tnum"; font-variant-numeric:tabular-nums;}
+    .statement{margin-top:12px; font-size:clamp(17px,5.2vw,21px); font-weight:900; line-height:1.5;
+      color:#0f2022; background:#e9f6f8; border:1px dashed var(--accent-2); padding:12px; border-radius:12px;}
+    .note{margin-top:10px; color:var(--muted); font-size:12px;}
+    footer{margin:18px 4px 6px; text-align:center; color:var(--muted); font-size:11px;}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1 class="title">それ、売上に直すといくらですか？</h1>
+      <div class="subtitle">経費や投資の価額を「売上相当額」に換算して意思決定の質を高めましょう。</div>
+    </header>
+
+    <section class="card" aria-label="入力">
+      <!-- ① 価額：テキスト + スライダー -->
+      <div class="field">
+        <div class="label big">① 価額（円）</div>
+        <div class="yen-input" style="margin-bottom:8px;">
+          <span class="prefix">¥</span>
+          <input id="price" class="money" type="text" inputmode="numeric" placeholder="例）250,000" autocomplete="off" />
+        </div>
+        <div class="range-row" title="価額スライダー">
+          <!-- MAX を 1,000,000 に設定 -->
+          <input id="priceRange" type="range" min="0" max="1000000" step="1000" value="0" />
+          <div class="yen"><span id="priceRangeVal">¥0</span></div>
+        </div>
+      </div>
+
+      <!-- ② 限界利益率 -->
+      <div class="field">
+        <div class="label big">② 御社の限界利益率（％）</div>
+        <div class="helper">※御社の限界利益率は変動損益計算書もしくは月次決算速報サービスにてご確認ください</div>
+        <div class="range-row">
+          <input id="cmr" type="range" min="5" max="95" step="0.5" value="37.5" aria-label="限界利益率スライダー" />
+          <div class="pct"><span id="cmrVal">37.5</span>%</div>
+        </div>
+        <div class="chip-row" aria-label="クイック設定">
+          <span class="chip"><button data-pct="30">30%</button></span>
+          <span class="chip"><button data-pct="35">35%</button></span>
+          <span class="chip"><button data-pct="40">40%</button></span>
+          <span class="chip"><button data-pct="50">50%</button></span>
+          <span class="chip"><button data-pct="60">60%</button></span>
+          <span class="chip"><button data-pct="70">70%</button></span>
+        </div>
+      </div>
+
+      <div class="field">
+        <button id="calc" class="btn" type="button">売上相当額を計算</button>
+      </div>
+      <div class="field">
+        <button id="reset" class="btn secondary" type="button">リセット</button>
+      </div>
+
+      <div class="result" id="resultArea" hidden>
+        <div class="label big">御社の売上相当額</div>
+        <div class="amount" id="sales"></div>
+        <div class="statement" id="statement"></div>
+        <div class="note">※ 計算式：<b>売上相当額 ＝ 価額 ÷（限界利益率 / 100）</b><br>不足が出ないように<b>1円単位で切り上げ</b>ています。</div>
+      </div>
+    </section>
+
+    <footer>
+      Copyright (c) <span id="yyyy"></span> 税理士法人松本会計事務所 All Rights Reserved. / r2
+    </footer>
+  </div>
+
+  <script>
+    // ===== 要素参照 =====
+    const $ = (s)=>document.querySelector(s);
+    const priceEl = $('#price');
+    const priceRange = $('#priceRange');
+    const priceRangeVal = $('#priceRangeVal');
+    const cmrRange = $('#cmr');
+    const cmrVal = $('#cmrVal');
+    const resultArea = $('#resultArea');
+    const salesEl = $('#sales');
+    const statementEl = $('#statement');
+
+    // 年号を自動反映（添付の形を踏襲）
+    $('#yyyy').textContent = String(new Date().getFullYear());
+
+    // ===== 数値フォーマット =====
+    function parseMoney(text){
+      if(!text) return NaN;
+      return Number(String(text).replace(/[^\d.-]/g,''));
+    }
+    function formatJPY(n){
+      return n.toLocaleString('ja-JP',{style:'currency',currency:'JPY',maximumFractionDigits:0});
+    }
+    function formatPlainJPY(n){
+      return n.toLocaleString('ja-JP',{maximumFractionDigits:0});
+    }
+
+    // ===== 価額：テキスト入力 → スライダーへ反映 =====
+    priceEl.addEventListener('input', (e)=>{
+      const raw = parseMoney(e.target.value);
+      if(isNaN(raw)) return;
+      e.target.value = formatPlainJPY(raw);
+      const min = Number(priceRange.min), max = Number(priceRange.max);
+      const clamped = Math.max(min, Math.min(max, raw));
+      priceRange.value = clamped;
+      priceRangeVal.textContent = formatJPY(Number(priceRange.value));
+    });
+
+    // ===== 価額：スライダー → テキストへ反映 =====
+    priceRange.addEventListener('input', ()=>{
+      const val = Number(priceRange.value);
+      priceEl.value = formatPlainJPY(val);
+      priceRangeVal.textContent = formatJPY(val);
+    });
+    priceRange.dispatchEvent(new Event('input')); // 初期同期
+
+    // ===== 限界利益率 =====
+    cmrRange.addEventListener('input', ()=>{
+      cmrVal.textContent = Number(cmrRange.value).toFixed(1).replace(/\.0$/,'');
+    });
+    cmrRange.dispatchEvent(new Event('input'));
+    document.querySelectorAll('.chip button').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        cmrRange.value = btn.dataset.pct;
+        cmrRange.dispatchEvent(new Event('input'));
+      });
+    });
+
+    // ===== 計算 =====
+    function calc(){
+      const price = parseMoney(priceEl.value);
+      const pct = Number(cmrRange.value);
+      if(isNaN(price) || price <= 0){
+        alert('価額を正しく入力してください。');
+        priceEl.focus();
+        return;
+      }
+      if(!(pct > 0)){
+        alert('限界利益率を正しく設定してください。');
+        return;
+      }
+      const rate = pct / 100;
+      const salesNeeded = Math.ceil(price / rate);
+      salesEl.textContent = formatJPY(salesNeeded);
+      statementEl.textContent = `${formatJPY(price)} の買い物は、御社の売上 ${formatJPY(salesNeeded)} に相当します。`;
+      resultArea.hidden = false;
+      resultArea.scrollIntoView({behavior:'smooth', block:'center'});
+    }
+    $('#calc').addEventListener('click', calc);
+    priceEl.addEventListener('keydown', (e)=>{ if(e.key==='Enter') calc(); });
+
+    // ===== リセット =====
+    $('#reset').addEventListener('click', ()=>{
+      priceEl.value = '';
+      priceRange.value = 0;
+      priceRange.dispatchEvent(new Event('input'));
+      cmrRange.value = 37.5;
+      cmrRange.dispatchEvent(new Event('input'));
+      resultArea.hidden = true;
+      window.scrollTo({top:0, behavior:'smooth'});
+    });
+  </script>
+</body>
+</html>
