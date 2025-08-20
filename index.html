@@ -7,7 +7,6 @@
   <meta name="theme-color" content="#2f7f86" />
   <style>
     :root{
-      /* 添付スクショの青緑系トーン */
       --bg:#f4f9fb;
       --card:#ffffff;
       --ink:#1e2a2d;
@@ -40,13 +39,11 @@
     .label{font-size:15px; color:var(--muted); margin:0 0 6px 2px;}
     .label.big{font-size:16px; font-weight:700; color:#324245;}
     .helper{font-size:12px; color:#6a7a7d; margin:4px 2px 0;}
-    /* 金額入力 */
     .yen-input{display:flex; align-items:center; gap:8px; background:#f8fcfd;
       border:1px solid #d9eaed; border-radius:12px; padding:10px 12px;}
     .yen-input .prefix{font-weight:700; color:var(--accent); border-right:1px solid #e6f1f3; padding-right:10px;}
     input[type="text"].money{flex:1; border:0; outline:none; background:transparent;
       font-size:22px; font-weight:800; color:var(--ink); letter-spacing:.02em;}
-    /* スライダー（共通） */
     .range-row{display:flex; align-items:center; gap:12px; padding:8px 0;}
     input[type="range"]{-webkit-appearance:none; width:100%; height:26px; background:transparent;}
     input[type="range"]::-webkit-slider-runnable-track{
@@ -77,30 +74,29 @@
   <div class="wrap">
     <header>
       <h1 class="title">それ、売上に直すといくらですか？</h1>
-      <div class="subtitle">経費や投資の価額を「売上相当額」に換算して意思決定の質を高めましょう。</div>
+      <div class="subtitle">支出や投資の金額を「御社の売上相当額」に換算して意思決定の質を高めましょう。</div>
     </header>
 
     <section class="card" aria-label="入力">
-      <!-- ① 価額：テキスト + スライダー -->
+      <!-- ① 支出額：テキスト + スライダー -->
       <div class="field">
-        <div class="label big">① 価額（円）</div>
+        <div class="label big">① 支出額（円）</div>
         <div class="yen-input" style="margin-bottom:8px;">
           <span class="prefix">¥</span>
-          <input id="price" class="money" type="text" inputmode="numeric" placeholder="例）250,000" autocomplete="off" />
+          <input id="spend" class="money" type="text" inputmode="numeric" placeholder="例）250,000" autocomplete="off" />
         </div>
-        <div class="range-row" title="価額スライダー">
-          <!-- MAX を 1,000,000 に設定 -->
-          <input id="priceRange" type="range" min="0" max="1000000" step="1000" value="0" />
-          <div class="yen"><span id="priceRangeVal">¥0</span></div>
+        <div class="range-row" title="支出額スライダー">
+          <input id="spendRange" type="range" min="0" max="1000000" step="1000" value="0" />
+          <div class="yen"><span id="spendRangeVal">¥0</span></div>
         </div>
       </div>
 
       <!-- ② 限界利益率 -->
       <div class="field">
         <div class="label big">② 御社の限界利益率（％）</div>
-        <div class="helper">※御社の限界利益率は変動損益計算書もしくは月次決算速報サービスにてご確認ください</div>
+        <div class="helper">※変動損益計算書もしくは月次決算速報サービスにてご確認ください</div>
         <div class="range-row">
-          <input id="cmr" type="range" min="5" max="95" step="0.5" value="37.5" aria-label="限界利益率スライダー" />
+          <input id="cmr" type="range" min="5" max="95" step="0.1" value="37.5" aria-label="限界利益率スライダー" />
           <div class="pct"><span id="cmrVal">37.5</span>%</div>
         </div>
         <div class="chip-row" aria-label="クイック設定">
@@ -124,7 +120,7 @@
         <div class="label big">御社の売上相当額</div>
         <div class="amount" id="sales"></div>
         <div class="statement" id="statement"></div>
-        <div class="note">※ 計算式：<b>売上相当額 ＝ 価額 ÷（限界利益率 / 100）</b><br>不足が出ないように<b>1円単位で切り上げ</b>ています。</div>
+        <div class="note">※ 計算式：<b>御社の売上相当額 ＝ 支出額 ÷（限界利益率 / 100）</b><br>不足が出ないように<b>1円単位で切り上げ</b>ています。</div>
       </div>
     </section>
 
@@ -134,21 +130,18 @@
   </div>
 
   <script>
-    // ===== 要素参照 =====
     const $ = (s)=>document.querySelector(s);
-    const priceEl = $('#price');
-    const priceRange = $('#priceRange');
-    const priceRangeVal = $('#priceRangeVal');
+    const spendEl = $('#spend');
+    const spendRange = $('#spendRange');
+    const spendRangeVal = $('#spendRangeVal');
     const cmrRange = $('#cmr');
     const cmrVal = $('#cmrVal');
     const resultArea = $('#resultArea');
     const salesEl = $('#sales');
     const statementEl = $('#statement');
 
-    // 年号を自動反映（添付の形を踏襲）
     $('#yyyy').textContent = String(new Date().getFullYear());
 
-    // ===== 数値フォーマット =====
     function parseMoney(text){
       if(!text) return NaN;
       return Number(String(text).replace(/[^\d.-]/g,''));
@@ -160,26 +153,26 @@
       return n.toLocaleString('ja-JP',{maximumFractionDigits:0});
     }
 
-    // ===== 価額：テキスト入力 → スライダーへ反映 =====
-    priceEl.addEventListener('input', (e)=>{
+    // 支出額：テキスト → スライダー
+    spendEl.addEventListener('input', (e)=>{
       const raw = parseMoney(e.target.value);
       if(isNaN(raw)) return;
       e.target.value = formatPlainJPY(raw);
-      const min = Number(priceRange.min), max = Number(priceRange.max);
+      const min = Number(spendRange.min), max = Number(spendRange.max);
       const clamped = Math.max(min, Math.min(max, raw));
-      priceRange.value = clamped;
-      priceRangeVal.textContent = formatJPY(Number(priceRange.value));
+      spendRange.value = clamped;
+      spendRangeVal.textContent = formatJPY(Number(spendRange.value));
     });
 
-    // ===== 価額：スライダー → テキストへ反映 =====
-    priceRange.addEventListener('input', ()=>{
-      const val = Number(priceRange.value);
-      priceEl.value = formatPlainJPY(val);
-      priceRangeVal.textContent = formatJPY(val);
+    // 支出額：スライダー → テキスト
+    spendRange.addEventListener('input', ()=>{
+      const val = Number(spendRange.value);
+      spendEl.value = formatPlainJPY(val);
+      spendRangeVal.textContent = formatJPY(val);
     });
-    priceRange.dispatchEvent(new Event('input')); // 初期同期
+    spendRange.dispatchEvent(new Event('input'));
 
-    // ===== 限界利益率 =====
+    // 限界利益率
     cmrRange.addEventListener('input', ()=>{
       cmrVal.textContent = Number(cmrRange.value).toFixed(1).replace(/\.0$/,'');
     });
@@ -191,13 +184,12 @@
       });
     });
 
-    // ===== 計算 =====
     function calc(){
-      const price = parseMoney(priceEl.value);
+      const spend = parseMoney(spendEl.value);
       const pct = Number(cmrRange.value);
-      if(isNaN(price) || price <= 0){
-        alert('価額を正しく入力してください。');
-        priceEl.focus();
+      if(isNaN(spend) || spend <= 0){
+        alert('支出額を正しく入力してください。');
+        spendEl.focus();
         return;
       }
       if(!(pct > 0)){
@@ -205,20 +197,19 @@
         return;
       }
       const rate = pct / 100;
-      const salesNeeded = Math.ceil(price / rate);
+      const salesNeeded = Math.ceil(spend / rate);
       salesEl.textContent = formatJPY(salesNeeded);
-      statementEl.textContent = `${formatJPY(price)} の買い物は、御社の売上 ${formatJPY(salesNeeded)} に相当します。`;
+      statementEl.textContent = `${formatJPY(spend)} の支出は、御社の売上 ${formatJPY(salesNeeded)} に相当します。`;
       resultArea.hidden = false;
       resultArea.scrollIntoView({behavior:'smooth', block:'center'});
     }
     $('#calc').addEventListener('click', calc);
-    priceEl.addEventListener('keydown', (e)=>{ if(e.key==='Enter') calc(); });
+    spendEl.addEventListener('keydown', (e)=>{ if(e.key==='Enter') calc(); });
 
-    // ===== リセット =====
     $('#reset').addEventListener('click', ()=>{
-      priceEl.value = '';
-      priceRange.value = 0;
-      priceRange.dispatchEvent(new Event('input'));
+      spendEl.value = '';
+      spendRange.value = 0;
+      spendRange.dispatchEvent(new Event('input'));
       cmrRange.value = 37.5;
       cmrRange.dispatchEvent(new Event('input'));
       resultArea.hidden = true;
