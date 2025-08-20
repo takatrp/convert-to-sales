@@ -67,7 +67,7 @@
     .statement{margin-top:12px; font-size:clamp(17px,5.2vw,21px); font-weight:900; line-height:1.5;
       color:#0f2022; background:#e9f6f8; border:1px dashed var(--accent-2); padding:12px; border-radius:12px;}
     .note{margin-top:10px; color:var(--muted); font-size:12px;}
-    footer{margin:18px 4px 6px; text-align:center; color:var(--muted); font-size:11px;}
+    footer{margin:18px 4px 6px; text-align:center; color:#667; font-size:11px;}
   </style>
 </head>
 <body>
@@ -78,26 +78,26 @@
     </header>
 
     <section class="card" aria-label="入力">
-      <!-- ① 支出額：テキスト + スライダー -->
+      <!-- ① 支出額：テキスト + スライダー（デフォルト 100,000円） -->
       <div class="field">
         <div class="label big">① 支出額（円）</div>
         <div class="yen-input" style="margin-bottom:8px;">
           <span class="prefix">¥</span>
-          <input id="spend" class="money" type="text" inputmode="numeric" placeholder="例）250,000" autocomplete="off" />
+          <input id="spend" class="money" type="text" inputmode="numeric" value="100,000" autocomplete="off" />
         </div>
         <div class="range-row" title="支出額スライダー">
-          <input id="spendRange" type="range" min="0" max="1000000" step="1000" value="0" />
-          <div class="yen"><span id="spendRangeVal">¥0</span></div>
+          <input id="spendRange" type="range" min="0" max="1000000" step="1000" value="100000" />
+          <div class="yen"><span id="spendRangeVal">¥100,000</span></div>
         </div>
       </div>
 
-      <!-- ② 限界利益率 -->
+      <!-- ② 限界利益率（デフォルト 54.7%・0.1%刻み） -->
       <div class="field">
         <div class="label big">② 御社の限界利益率（％）</div>
         <div class="helper">※変動損益計算書もしくは月次決算速報サービスにてご確認ください</div>
         <div class="range-row">
-          <input id="cmr" type="range" min="5" max="95" step="0.1" value="37.5" aria-label="限界利益率スライダー" />
-          <div class="pct"><span id="cmrVal">37.5</span>%</div>
+          <input id="cmr" type="range" min="5" max="95" step="0.1" value="54.7" aria-label="限界利益率スライダー" />
+          <div class="pct"><span id="cmrVal">54.7</span>%</div>
         </div>
         <div class="chip-row" aria-label="クイック設定">
           <span class="chip"><button data-pct="30">30%</button></span>
@@ -170,6 +170,7 @@
       spendEl.value = formatPlainJPY(val);
       spendRangeVal.textContent = formatJPY(val);
     });
+    // 初期同期
     spendRange.dispatchEvent(new Event('input'));
 
     // 限界利益率
@@ -177,6 +178,7 @@
       cmrVal.textContent = Number(cmrRange.value).toFixed(1).replace(/\.0$/,'');
     });
     cmrRange.dispatchEvent(new Event('input'));
+
     document.querySelectorAll('.chip button').forEach(btn=>{
       btn.addEventListener('click', ()=>{
         cmrRange.value = btn.dataset.pct;
@@ -207,10 +209,10 @@
     spendEl.addEventListener('keydown', (e)=>{ if(e.key==='Enter') calc(); });
 
     $('#reset').addEventListener('click', ()=>{
-      spendEl.value = '';
-      spendRange.value = 0;
+      spendEl.value = '100,000';
+      spendRange.value = 100000;
       spendRange.dispatchEvent(new Event('input'));
-      cmrRange.value = 37.5;
+      cmrRange.value = 54.7;
       cmrRange.dispatchEvent(new Event('input'));
       resultArea.hidden = true;
       window.scrollTo({top:0, behavior:'smooth'});
