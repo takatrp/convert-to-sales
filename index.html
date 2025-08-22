@@ -61,7 +61,7 @@
     }
     .pctbox .unit{font-weight:800; color:var(--ink);}
 
-    /* 業種チップ（2段・改行入り） */
+    /* 業種チップ（2段） */
     .chip-grid{
       display:grid; gap:8px; margin-top:8px;
       grid-template-columns:repeat(4, minmax(0, 1fr));
@@ -74,7 +74,7 @@
       cursor:pointer;
     }
     .chip .nm{font-weight:700;}
-    .chip .nm small{font-weight:600; font-size:11px; display:block; color:#4f7d83;}
+    .chip .nm small{display:block; font-size:11px; color:#4f7d83;} /* 2段表示用 */
     .chip .val{font-weight:900; color:#1f3a3e; font-feature-settings:"tnum";}
 
     /* ボタン */
@@ -119,6 +119,7 @@
         <div class="label big">② 御社の限界利益率（％）</div>
         <div class="helper">※変動損益計算書もしくは月次決算速報サービスにてご確認ください</div>
         <div class="range-row">
+          <!-- 5.0% 〜 95.0% -->
           <input id="cmr" type="range" min="5" max="95" step="0.1" value="54.7" aria-label="限界利益率スライダー" />
           <div class="pctbox">
             <input id="cmrInput" class="pct" type="text" inputmode="decimal" value="54.7" aria-label="限界利益率(直接入力)" />
@@ -126,15 +127,15 @@
           </div>
         </div>
 
-        <!-- 業種別チップ（2段・改行位置：平均の前） -->
+        <!-- 業種別チップ（2段、平均の語は削除） -->
         <div class="chip-grid" aria-label="業種平均プリセット">
-          <button class="chip" data-pct="54.7"><span class="nm">全産業<small>平均</small></span><span class="val">54.7%</span></button>
-          <button class="chip" data-pct="65.7"><span class="nm">漁業<small>平均</small></span><span class="val">65.7%</span></button>
-          <button class="chip" data-pct="48.0"><span class="nm">建設業<small>平均</small></span><span class="val">48.0%</span></button>
-          <button class="chip" data-pct="58.0"><span class="nm">製造業<small>平均</small></span><span class="val">58.0%</span></button>
-          <button class="chip" data-pct="29.7"><span class="nm">卸売業<small>平均</small></span><span class="val">29.7%</span></button>
-          <button class="chip" data-pct="35.7"><span class="nm">小売業<small>平均</small></span><span class="val">35.7%</span></button>
-          <button class="chip" data-pct="67.5"><span class="nm">宿泊・飲食業<small>平均</small></span><span class="val">67.5%</span></button>
+          <button class="chip" data-pct="54.7"><span class="nm">全産業</span><span class="val">54.7%</span></button>
+          <button class="chip" data-pct="65.7"><span class="nm">漁業</span><span class="val">65.7%</span></button>
+          <button class="chip" data-pct="48.0"><span class="nm">建設業</span><span class="val">48.0%</span></button>
+          <button class="chip" data-pct="58.0"><span class="nm">製造業</span><span class="val">58.0%</span></button>
+          <button class="chip" data-pct="29.7"><span class="nm">卸売業</span><span class="val">29.7%</span></button>
+          <button class="chip" data-pct="35.7"><span class="nm">小売業</span><span class="val">35.7%</span></button>
+          <button class="chip" data-pct="67.5"><span class="nm">宿泊・飲食業</span><span class="val">67.5%</span></button>
         </div>
       </div>
 
@@ -149,12 +150,15 @@
         <div class="label big">御社の売上相当額</div>
         <div class="amount" id="sales"></div>
         <div class="statement" id="statement"></div>
-        <div class="note">※ 計算式：<b>御社の売上相当額 ＝ 支出額 ÷（限界利益率 / 100）</b><br>不足が出ないように<b>1円単位で切り上げ</b>ています。</div>
+        <div class="note">
+          ※ 計算式：<b>御社の売上相当額 ＝ 支出額 ÷（限界利益率 / 100）</b><br>
+          ※各産業平均は令和7年版TKC経営指標（BAST）を参照しています。
+        </div>
       </div>
     </section>
 
     <footer>
-      Copyright (c) <span id="yyyy"></span> 税理士法人松本会計事務所 All Rights Reserved. / r2
+      Copyright (c) <span id="yyyy"></span> 税理士法人松本会計事務所 All Rights Reserved. / r7
     </footer>
   </div>
 
@@ -204,19 +208,20 @@
     });
     spendRange.dispatchEvent(new Event('input')); // 初期同期
 
-    // 限界利益率：スライダー → 入力
+    // 限界利益率：スライダー → 入力（常に小数1位表示）
     function syncCmrFromSlider(){
-      cmrInput.value = Number(cmrRange.value).toFixed(1).replace(/\.0$/,'0').replace(/(\.\d)$/, '$10'); // 常に1桁表示
+      cmrInput.value = Number(cmrRange.value).toFixed(1);
     }
     cmrRange.addEventListener('input', syncCmrFromSlider);
     syncCmrFromSlider();
 
-    // 限界利益率：入力 → スライダー
+    // 限界利益率：入力 → スライダー（小数1位に丸め）
     cmrInput.addEventListener('input', ()=>{
       const v = parsePct(cmrInput.value);
       if(isNaN(v)) return;
       const clamped = clamp(v, Number(cmrRange.min), Number(cmrRange.max));
       cmrRange.value = clamped.toFixed(1);
+      cmrInput.value = clamped.toFixed(1);
     });
 
     // 業種チップ
