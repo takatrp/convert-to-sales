@@ -27,24 +27,33 @@
     .label.big{font-size:16px; font-weight:700; color:#324245;}
     .helper{font-size:12px; color:#6a7a7d; margin:4px 2px 0;}
     .ref-title{margin:10px 2px 0; font-size:12px; color:#607c80;}
+
+    /* 入力UI */
     .range-row{display:flex; align-items:center; gap:12px; padding:8px 0;}
     input[type="range"]{-webkit-appearance:none; width:100%; height:26px; background:transparent;}
     input[type="range"]::-webkit-slider-runnable-track{height:6px; background:linear-gradient(90deg,var(--accent-2),var(--accent)); border-radius:999px;}
     input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none; width:26px; height:26px; border-radius:50%;
       background:#fff; border:2px solid var(--accent); margin-top:-10px; box-shadow:0 1px 6px rgba(0,0,0,.08);}
+
     .yen-input,.pctbox{display:flex; align-items:center; gap:8px; background:#f8fcfd; border:1px solid #d9eaed; border-radius:12px; padding:8px 10px;}
     .yen-input .prefix{font-weight:700; color:var(--accent); border-right:1px solid #e6f1f3; padding-right:10px;}
     input.money,input.pct{border:0; outline:none; background:transparent; font-size:20px; font-weight:800; color:var(--ink);
       letter-spacing:.02em; width:120px; text-align:right; font-feature-settings:"tnum"; font-variant-numeric:tabular-nums;}
     .pctbox .unit{font-weight:800; color:var(--ink);}
+
+    /* 業種チップ */
     .chip-grid{display:grid; gap:8px; margin-top:8px; grid-template-columns:repeat(4, minmax(0,1fr));}
     @media (max-width:380px){.chip-grid{grid-template-columns:repeat(3, minmax(0,1fr));}}
     .chip{display:flex; align-items:center; justify-content:space-between; border:1px solid #d9eaed; background:#f3fafb; color:var(--accent);
       padding:8px 10px; border-radius:12px; font-size:12px; line-height:1.05; cursor:pointer;}
     .chip .nm{font-weight:700;} .chip .val{font-weight:900; color:#1f3a3e; font-feature-settings:"tnum";}
+
+    /* ボタン */
     .btn{background:linear-gradient(180deg,var(--accent-2),var(--accent)); color:#fff; font-weight:900; letter-spacing:.02em;
       border:0; width:100%; border-radius:12px; padding:16px 18px; font-size:17px; box-shadow:var(--shadow);}
     .btn:active{transform:translateY(1px);} .btn.secondary{background:#eef7f8; color:var(--accent); box-shadow:none; border:1px solid #d9eaed;}
+
+    /* 結果表示 */
     .result{text-align:center; margin-top:16px;}
     .result .label{font-size:16px; font-weight:800; color:#324245;}
     .amount{font-size:clamp(24px,7.5vw,36px); font-weight:900; color:var(--accent); margin:8px 0 6px; font-feature-settings:"tnum"; font-variant-numeric:tabular-nums;}
@@ -91,14 +100,14 @@
         <div class="ref-title">参考：産業ごとの全国平均</div>
         <!-- 業種チップ -->
         <div class="chip-grid" aria-label="業種プリセット">
-          <button class="chip" data-pct="54.7"><span class="nm">全産業</span><span class="val">54.7%</span></button>
-          <button class="chip" data-pct="65.7"><span class="nm">漁業</span><span class="val">65.7%</span></button>
-          <button class="chip" data-pct="48.0"><span class="nm">建設業</span><span class="val">48.0%</span></button>
-          <button class="chip" data-pct="58.0"><span class="nm">製造業</span><span class="val">58.0%</span></button>
-          <button class="chip" data-pct="29.7"><span class="nm">卸売業</span><span class="val">29.7%</span></button>
-          <button class="chip" data-pct="35.7"><span class="nm">小売業</span><span class="val">35.7%</span></button>
-          <button class="chip" data-pct="82.4"><span class="nm">宿泊業</span><span class="val">82.4%</span></button>
-          <button class="chip" data-pct="64.2"><span class="nm">飲食業</span><span class="val">64.2%</span></button>
+          <button class="chip" type="button" data-pct="54.7"><span class="nm">全産業</span><span class="val">54.7%</span></button>
+          <button class="chip" type="button" data-pct="65.7"><span class="nm">漁業</span><span class="val">65.7%</span></button>
+          <button class="chip" type="button" data-pct="48.0"><span class="nm">建設業</span><span class="val">48.0%</span></button>
+          <button class="chip" type="button" data-pct="58.0"><span class="nm">製造業</span><span class="val">58.0%</span></button>
+          <button class="chip" type="button" data-pct="29.7"><span class="nm">卸売業</span><span class="val">29.7%</span></button>
+          <button class="chip" type="button" data-pct="35.7"><span class="nm">小売業</span><span class="val">35.7%</span></button>
+          <button class="chip" type="button" data-pct="82.4"><span class="nm">宿泊業</span><span class="val">82.4%</span></button>
+          <button class="chip" type="button" data-pct="64.2"><span class="nm">飲食業</span><span class="val">64.2%</span></button>
         </div>
       </div>
 
@@ -121,7 +130,7 @@
     </section>
 
     <footer>
-      Copyright (c) <span id="yyyy"></span> 税理士法人松本会計事務所 All Rights Reserved. / r7
+      Copyright (c) <span id="yyyy"></span> 税理士法人松本会計事務所 All Rights Reserved. / r8
     </footer>
   </div>
 
@@ -167,13 +176,13 @@
     // ===== 限界利益率 入力体験の改善 =====
     // スライダー → 入力（入力欄にフォーカスがある間は上書きしない）
     function syncCmrFromSlider(){
-      if(document.activeElement === cmrInput) return;        // ← これで削除操作を邪魔しない
+      if(document.activeElement === cmrInput) return;
       cmrInput.value = Number(cmrRange.value).toFixed(1);
     }
     cmrRange.addEventListener('input', syncCmrFromSlider);
     syncCmrFromSlider();
 
-    // 入力中は値を上書きしない。確定タイミング（blur/Enter/計算実行）で丸めて反映。
+    // 入力確定
     function commitCmrInput(){
       const min = Number(cmrRange.min), max = Number(cmrRange.max);
       const v = parsePct(cmrInput.value);
@@ -183,8 +192,8 @@
       cmrInput.value = clamped.toFixed(1);
     }
 
+    // 入力中：可能ならスライダーへ反映（空欄は許容）
     cmrInput.addEventListener('input', ()=>{
-      // 入力中はスライダーの位置だけ可能なら更新（範囲外や空欄は無視）
       const v = parsePct(cmrInput.value);
       const min = Number(cmrRange.min), max = Number(cmrRange.max);
       if(!isNaN(v) && v>=min && v<=max){
@@ -193,9 +202,19 @@
     });
     cmrInput.addEventListener('blur', commitCmrInput);
 
+    // 業種チップ（入力欄がフォーカスでも強制反映）
+    document.querySelectorAll('.chip-grid .chip').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const v = Number(btn.dataset.pct);
+        cmrRange.value = v.toFixed(1);
+        cmrInput.value = v.toFixed(1);   // ← 直接反映（sync関数に依存しない）
+        cmrInput.blur();                  // ← 不要なフォーカスで阻害されないように
+      });
+    });
+
     // 計算
     function calc(){
-      commitCmrInput(); // ← 計算前に入力値を確定
+      commitCmrInput();
       const spend = parseMoney(spendEl.value);
       const pct = parsePct(cmrInput.value);
       if(isNaN(spend) || spend <= 0){ alert('支出額を正しく入力してください。'); spendEl.focus(); return; }
@@ -207,7 +226,6 @@
       resultArea.hidden = false;
       resultArea.scrollIntoView({behavior:'smooth', block:'center'});
     }
-
     $('#calc').addEventListener('click', calc);
     cmrInput.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); calc(); }});
     spendEl.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); calc(); }});
@@ -215,7 +233,7 @@
     // リセット（初期値へ）
     $('#reset').addEventListener('click', ()=>{
       spendRange.value = 100000; spendRange.dispatchEvent(new Event('input'));
-      cmrRange.value = 54.7; syncCmrFromSlider();
+      cmrRange.value = 54.7; cmrInput.value = '54.7';
       resultArea.hidden = true; window.scrollTo({top:0, behavior:'smooth'});
     });
   </script>
