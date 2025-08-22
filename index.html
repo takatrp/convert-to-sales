@@ -39,6 +39,7 @@
     .label{font-size:15px; color:var(--muted); margin:0 0 6px 2px;}
     .label.big{font-size:16px; font-weight:700; color:#324245;}
     .helper{font-size:12px; color:#6a7a7d; margin:4px 2px 0;}
+    .ref-title{margin:10px 2px 0; font-size:12px; color:#607c80;}
 
     /* 入力UI */
     .range-row{display:flex; align-items:center; gap:12px; padding:8px 0;}
@@ -61,7 +62,7 @@
     }
     .pctbox .unit{font-weight:800; color:var(--ink);}
 
-    /* 業種チップ（2段） */
+    /* 業種チップ */
     .chip-grid{
       display:grid; gap:8px; margin-top:8px;
       grid-template-columns:repeat(4, minmax(0, 1fr));
@@ -74,7 +75,6 @@
       cursor:pointer;
     }
     .chip .nm{font-weight:700;}
-    .chip .nm small{display:block; font-size:11px; color:#4f7d83;} /* 2段表示用 */
     .chip .val{font-weight:900; color:#1f3a3e; font-feature-settings:"tnum";}
 
     /* ボタン */
@@ -127,15 +127,18 @@
           </div>
         </div>
 
-        <!-- 業種別チップ（2段、平均の語は削除） -->
-        <div class="chip-grid" aria-label="業種平均プリセット">
+        <!-- 参考見出し -->
+        <div class="ref-title">参考：産業ごとの全国平均</div>
+        <!-- 業種チップ（平均の語は表示しない） -->
+        <div class="chip-grid" aria-label="業種プリセット">
           <button class="chip" data-pct="54.7"><span class="nm">全産業</span><span class="val">54.7%</span></button>
           <button class="chip" data-pct="65.7"><span class="nm">漁業</span><span class="val">65.7%</span></button>
           <button class="chip" data-pct="48.0"><span class="nm">建設業</span><span class="val">48.0%</span></button>
           <button class="chip" data-pct="58.0"><span class="nm">製造業</span><span class="val">58.0%</span></button>
           <button class="chip" data-pct="29.7"><span class="nm">卸売業</span><span class="val">29.7%</span></button>
           <button class="chip" data-pct="35.7"><span class="nm">小売業</span><span class="val">35.7%</span></button>
-          <button class="chip" data-pct="67.5"><span class="nm">宿泊・飲食業</span><span class="val">67.5%</span></button>
+          <button class="chip" data-pct="82.4"><span class="nm">宿泊業</span><span class="val">82.4%</span></button>
+          <button class="chip" data-pct="64.2"><span class="nm">飲食業</span><span class="val">64.2%</span></button>
         </div>
       </div>
 
