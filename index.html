@@ -39,11 +39,8 @@
     .label{font-size:15px; color:var(--muted); margin:0 0 6px 2px;}
     .label.big{font-size:16px; font-weight:700; color:#324245;}
     .helper{font-size:12px; color:#6a7a7d; margin:4px 2px 0;}
-    .yen-input{display:flex; align-items:center; gap:8px; background:#f8fcfd;
-      border:1px solid #d9eaed; border-radius:12px; padding:10px 12px;}
-    .yen-input .prefix{font-weight:700; color:var(--accent); border-right:1px solid #e6f1f3; padding-right:10px;}
-    input[type="text"].money{flex:1; border:0; outline:none; background:transparent;
-      font-size:22px; font-weight:800; color:var(--ink); letter-spacing:.02em;}
+
+    /* 入力UI */
     .range-row{display:flex; align-items:center; gap:12px; padding:8px 0;}
     input[type="range"]{-webkit-appearance:none; width:100%; height:26px; background:transparent;}
     input[type="range"]::-webkit-slider-runnable-track{
@@ -51,15 +48,42 @@
     input[type="range"]::-webkit-slider-thumb{
       -webkit-appearance:none; width:26px; height:26px; border-radius:50%;
       background:#fff; border:2px solid var(--accent); margin-top:-10px; box-shadow:0 1px 6px rgba(0,0,0,.08);}
-    .pct,.yen{min-width:92px; text-align:right; font-feature-settings:"tnum"; font-variant-numeric:tabular-nums; font-weight:800; font-size:16px;}
-    .chip-row{display:flex; gap:8px; flex-wrap:wrap; margin-top:6px;}
-    .chip{border:1px solid #d9eaed; color:var(--accent); background:#f3fafb;
-      padding:6px 10px; border-radius:999px; font-size:12px;}
-    .chip button{all:unset; cursor:pointer;}
+
+    .yen-input, .pctbox{
+      display:flex; align-items:center; gap:8px; background:#f8fcfd;
+      border:1px solid #d9eaed; border-radius:12px; padding:8px 10px;
+    }
+    .yen-input .prefix{font-weight:700; color:var(--accent); border-right:1px solid #e6f1f3; padding-right:10px;}
+    input.money, input.pct{
+      border:0; outline:none; background:transparent;
+      font-size:20px; font-weight:800; color:var(--ink); letter-spacing:.02em;
+      width:120px; text-align:right; font-feature-settings:"tnum"; font-variant-numeric:tabular-nums;
+    }
+    .pctbox .unit{font-weight:800; color:var(--ink);}
+
+    /* 業種チップ（2段・改行入り） */
+    .chip-grid{
+      display:grid; gap:8px; margin-top:8px;
+      grid-template-columns:repeat(4, minmax(0, 1fr));
+    }
+    @media (max-width:380px){ .chip-grid{ grid-template-columns:repeat(3, minmax(0, 1fr)); } }
+    .chip{
+      display:flex; align-items:center; justify-content:space-between;
+      border:1px solid #d9eaed; background:#f3fafb; color:var(--accent);
+      padding:8px 10px; border-radius:12px; font-size:12px; line-height:1.05;
+      cursor:pointer;
+    }
+    .chip .nm{font-weight:700;}
+    .chip .nm small{font-weight:600; font-size:11px; display:block; color:#4f7d83;}
+    .chip .val{font-weight:900; color:#1f3a3e; font-feature-settings:"tnum";}
+
+    /* ボタン */
     .btn{background:linear-gradient(180deg,var(--accent-2),var(--accent)); color:#fff; font-weight:900;
       letter-spacing:.02em; border:0; width:100%; border-radius:12px; padding:16px 18px; font-size:17px; box-shadow:var(--shadow);}
     .btn:active{transform:translateY(1px);}
     .btn.secondary{background:#eef7f8; color:var(--accent); box-shadow:none; border:1px solid #d9eaed;}
+
+    /* 結果表示 */
     .result{text-align:center; margin-top:16px;}
     .result .label{font-size:16px; font-weight:800; color:#324245;}
     .amount{font-size:clamp(24px,7.5vw,36px); font-weight:900; color:var(--accent);
@@ -67,7 +91,7 @@
     .statement{margin-top:12px; font-size:clamp(17px,5.2vw,21px); font-weight:900; line-height:1.5;
       color:#0f2022; background:#e9f6f8; border:1px dashed var(--accent-2); padding:12px; border-radius:12px;}
     .note{margin-top:10px; color:var(--muted); font-size:12px;}
-    footer{margin:18px 4px 6px; text-align:center; color:var(--muted); font-size:11px;}
+    footer{margin:18px 4px 6px; text-align:center; color:#667; font-size:11px;}
   </style>
 </head>
 <body>
@@ -78,34 +102,39 @@
     </header>
 
     <section class="card" aria-label="入力">
-      <!-- ① 支出額：テキスト + スライダー -->
+      <!-- ① 支出額：スライダー左 / 入力欄 右（初期値 100,000円） -->
       <div class="field">
         <div class="label big">① 支出額（円）</div>
-        <div class="yen-input" style="margin-bottom:8px;">
-          <span class="prefix">¥</span>
-          <input id="spend" class="money" type="text" inputmode="numeric" placeholder="例）250,000" autocomplete="off" />
-        </div>
         <div class="range-row" title="支出額スライダー">
-          <input id="spendRange" type="range" min="0" max="1000000" step="1000" value="0" />
-          <div class="yen"><span id="spendRangeVal">¥0</span></div>
+          <input id="spendRange" type="range" min="0" max="1000000" step="1000" value="100000" />
+          <div class="yen-input compact">
+            <span class="prefix">¥</span>
+            <input id="spend" class="money" type="text" inputmode="numeric" value="100,000" autocomplete="off" />
+          </div>
         </div>
       </div>
 
-      <!-- ② 限界利益率 -->
+      <!-- ② 限界利益率：スライダー + 直接入力（0.1%刻み・初期値54.7%） -->
       <div class="field">
         <div class="label big">② 御社の限界利益率（％）</div>
         <div class="helper">※変動損益計算書もしくは月次決算速報サービスにてご確認ください</div>
         <div class="range-row">
-          <input id="cmr" type="range" min="5" max="95" step="0.1" value="37.5" aria-label="限界利益率スライダー" />
-          <div class="pct"><span id="cmrVal">37.5</span>%</div>
+          <input id="cmr" type="range" min="5" max="95" step="0.1" value="54.7" aria-label="限界利益率スライダー" />
+          <div class="pctbox">
+            <input id="cmrInput" class="pct" type="text" inputmode="decimal" value="54.7" aria-label="限界利益率(直接入力)" />
+            <span class="unit">%</span>
+          </div>
         </div>
-        <div class="chip-row" aria-label="クイック設定">
-          <span class="chip"><button data-pct="30">30%</button></span>
-          <span class="chip"><button data-pct="35">35%</button></span>
-          <span class="chip"><button data-pct="40">40%</button></span>
-          <span class="chip"><button data-pct="50">50%</button></span>
-          <span class="chip"><button data-pct="60">60%</button></span>
-          <span class="chip"><button data-pct="70">70%</button></span>
+
+        <!-- 業種別チップ（2段・改行位置：平均の前） -->
+        <div class="chip-grid" aria-label="業種平均プリセット">
+          <button class="chip" data-pct="54.7"><span class="nm">全産業<small>平均</small></span><span class="val">54.7%</span></button>
+          <button class="chip" data-pct="65.7"><span class="nm">漁業<small>平均</small></span><span class="val">65.7%</span></button>
+          <button class="chip" data-pct="48.0"><span class="nm">建設業<small>平均</small></span><span class="val">48.0%</span></button>
+          <button class="chip" data-pct="58.0"><span class="nm">製造業<small>平均</small></span><span class="val">58.0%</span></button>
+          <button class="chip" data-pct="29.7"><span class="nm">卸売業<small>平均</small></span><span class="val">29.7%</span></button>
+          <button class="chip" data-pct="35.7"><span class="nm">小売業<small>平均</small></span><span class="val">35.7%</span></button>
+          <button class="chip" data-pct="67.5"><span class="nm">宿泊・飲食業<small>平均</small></span><span class="val">67.5%</span></button>
         </div>
       </div>
 
@@ -131,11 +160,13 @@
 
   <script>
     const $ = (s)=>document.querySelector(s);
+
     const spendEl = $('#spend');
     const spendRange = $('#spendRange');
-    const spendRangeVal = $('#spendRangeVal');
+
     const cmrRange = $('#cmr');
-    const cmrVal = $('#cmrVal');
+    const cmrInput = $('#cmrInput');
+
     const resultArea = $('#resultArea');
     const salesEl = $('#sales');
     const statementEl = $('#statement');
@@ -152,48 +183,63 @@
     function formatPlainJPY(n){
       return n.toLocaleString('ja-JP',{maximumFractionDigits:0});
     }
+    function parsePct(text){
+      if(text==null) return NaN;
+      const t = String(text).replace('%','').replace(',','.').trim();
+      return Number(t);
+    }
+    function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
 
-    // 支出額：テキスト → スライダー
+    // 支出額：スライダー → 入力欄
+    spendRange.addEventListener('input', ()=>{
+      const val = Number(spendRange.value);
+      spendEl.value = formatPlainJPY(val);
+    });
+    // 支出額：入力欄 → スライダー
     spendEl.addEventListener('input', (e)=>{
       const raw = parseMoney(e.target.value);
       if(isNaN(raw)) return;
       e.target.value = formatPlainJPY(raw);
-      const min = Number(spendRange.min), max = Number(spendRange.max);
-      const clamped = Math.max(min, Math.min(max, raw));
-      spendRange.value = clamped;
-      spendRangeVal.textContent = formatJPY(Number(spendRange.value));
+      spendRange.value = clamp(raw, Number(spendRange.min), Number(spendRange.max));
+    });
+    spendRange.dispatchEvent(new Event('input')); // 初期同期
+
+    // 限界利益率：スライダー → 入力
+    function syncCmrFromSlider(){
+      cmrInput.value = Number(cmrRange.value).toFixed(1).replace(/\.0$/,'0').replace(/(\.\d)$/, '$10'); // 常に1桁表示
+    }
+    cmrRange.addEventListener('input', syncCmrFromSlider);
+    syncCmrFromSlider();
+
+    // 限界利益率：入力 → スライダー
+    cmrInput.addEventListener('input', ()=>{
+      const v = parsePct(cmrInput.value);
+      if(isNaN(v)) return;
+      const clamped = clamp(v, Number(cmrRange.min), Number(cmrRange.max));
+      cmrRange.value = clamped.toFixed(1);
     });
 
-    // 支出額：スライダー → テキスト
-    spendRange.addEventListener('input', ()=>{
-      const val = Number(spendRange.value);
-      spendEl.value = formatPlainJPY(val);
-      spendRangeVal.textContent = formatJPY(val);
-    });
-    spendRange.dispatchEvent(new Event('input'));
-
-    // 限界利益率
-    cmrRange.addEventListener('input', ()=>{
-      cmrVal.textContent = Number(cmrRange.value).toFixed(1).replace(/\.0$/,'');
-    });
-    cmrRange.dispatchEvent(new Event('input'));
-    document.querySelectorAll('.chip button').forEach(btn=>{
+    // 業種チップ
+    document.querySelectorAll('.chip-grid .chip').forEach(btn=>{
       btn.addEventListener('click', ()=>{
-        cmrRange.value = btn.dataset.pct;
-        cmrRange.dispatchEvent(new Event('input'));
+        const v = Number(btn.dataset.pct);
+        cmrRange.value = v.toFixed(1);
+        syncCmrFromSlider();
       });
     });
 
+    // 計算
     function calc(){
       const spend = parseMoney(spendEl.value);
-      const pct = Number(cmrRange.value);
+      const pct = parsePct(cmrInput.value);
       if(isNaN(spend) || spend <= 0){
         alert('支出額を正しく入力してください。');
         spendEl.focus();
         return;
       }
-      if(!(pct > 0)){
-        alert('限界利益率を正しく設定してください。');
+      if(isNaN(pct) || pct <= 0){
+        alert('限界利益率を正しく入力してください。');
+        cmrInput.focus();
         return;
       }
       const rate = pct / 100;
@@ -205,13 +251,14 @@
     }
     $('#calc').addEventListener('click', calc);
     spendEl.addEventListener('keydown', (e)=>{ if(e.key==='Enter') calc(); });
+    cmrInput.addEventListener('keydown', (e)=>{ if(e.key==='Enter') calc(); });
 
+    // リセット（初期値へ）
     $('#reset').addEventListener('click', ()=>{
-      spendEl.value = '';
-      spendRange.value = 0;
+      spendRange.value = 100000;
       spendRange.dispatchEvent(new Event('input'));
-      cmrRange.value = 37.5;
-      cmrRange.dispatchEvent(new Event('input'));
+      cmrRange.value = 54.7;
+      syncCmrFromSlider();
       resultArea.hidden = true;
       window.scrollTo({top:0, behavior:'smooth'});
     });
