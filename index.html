@@ -63,9 +63,9 @@
     .result .label{font-size:16px; font-weight:800; color:#324245;}
     .amount{font-size:clamp(24px,7.5vw,36px); font-weight:900; color:var(--accent); margin:8px 0 6px;
       font-feature-settings:"tnum"; font-variant-numeric:tabular-nums; white-space:nowrap;}
-    .statement{margin-top:12px; font-size:21px; font-weight:900; line-height:1.45; /* 基準値 */
+    .statement{margin-top:12px; font-size:21px; font-weight:900; line-height:1.45;
       color:#0f2022; background:#e9f6f8; border:1px dashed var(--accent-2); padding:12px; border-radius:12px;
-      white-space:nowrap; overflow:hidden;} /* 必ず1行に */
+      white-space:nowrap; overflow:hidden;}
     .note{margin-top:10px; color:var(--muted); font-size:12px;}
     footer{margin:18px 4px 6px; text-align:center; color:#667; font-size:11px;}
   </style>
@@ -133,8 +133,8 @@
         </div>
       </div>
 
-      <!-- コピー / リセット / 印刷（＝結果表示の下に配置） -->
-      <div class="btn-row">
+      <!-- コピー / リセット / 印刷（＝結果表示の下。初期は非表示） -->
+      <div class="btn-row" id="actionRow" hidden>
         <button id="copy" class="btn secondary" type="button" aria-label="結果をコピー">コピー</button>
         <button id="reset" class="btn secondary" type="button" aria-label="入力をリセット">リセット</button>
         <button id="print" class="btn secondary" type="button" aria-label="印刷">印刷</button>
@@ -142,7 +142,7 @@
     </section>
 
     <footer>
-      Copyright (c) <span id="yyyy"></span> 税理士法人松本会計事務所 All Rights Reserved. / r10
+      Copyright (c) <span id="yyyy"></span> 税理士法人松本会計事務所 All Rights Reserved. / r11
     </footer>
   </div>
 
@@ -159,6 +159,7 @@
     const salesEl = $('#sales');
     const statementEl = $('#statement');
 
+    const actionRow = $('#actionRow');
     const copyBtn = $('#copy');
     const resetBtn = $('#reset');
     const printBtn = $('#print');
@@ -227,9 +228,7 @@
 
     // テキストを1行に収める（statement）
     function fitToOneLine(el, maxPx=21, minPx=14){
-      // いったん基準サイズに戻す
       el.style.fontSize = maxPx + 'px';
-      // はみ出す間は0.5pxずつ縮小
       let size = maxPx;
       const boxWidth = el.clientWidth;
       while (el.scrollWidth > boxWidth && size > minPx){
@@ -237,7 +236,6 @@
         el.style.fontSize = size + 'px';
       }
     }
-    // リサイズ時にも再調整
     window.addEventListener('resize', ()=>{ if(!resultArea.hidden){ fitToOneLine(statementEl); } });
 
     // 計算
@@ -252,7 +250,7 @@
       salesEl.textContent = formatJPY(salesNeeded);
       statementEl.textContent = `${formatJPY(spend)} の支出は、御社の売上 ${formatJPY(salesNeeded)} に相当します。`;
       resultArea.hidden = false;
-      // 6桁金額でも2段にならないよう調整
+      actionRow.hidden = false;           // ← 計算後にボタン群を表示
       fitToOneLine(statementEl);
       resultArea.scrollIntoView({behavior:'smooth', block:'center'});
     }
@@ -283,7 +281,9 @@
     resetBtn.addEventListener('click', ()=>{
       spendRange.value = 100000; spendRange.dispatchEvent(new Event('input'));
       cmrRange.value = 54.7; cmrInput.value = '54.7';
-      resultArea.hidden = true; window.scrollTo({top:0, behavior:'smooth'});
+      resultArea.hidden = true;
+      actionRow.hidden = true;            // ← リセット時はボタン群を非表示に戻す
+      window.scrollTo({top:0, behavior:'smooth'});
     });
 
     // 印刷
