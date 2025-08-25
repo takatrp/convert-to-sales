@@ -51,7 +51,12 @@
     /* ボタン */
     .btn{background:linear-gradient(180deg,var(--accent-2),var(--accent)); color:#fff; font-weight:900; letter-spacing:.02em;
       border:0; width:100%; border-radius:12px; padding:16px 18px; font-size:17px; box-shadow:var(--shadow);}
-    .btn:active{transform:translateY(1px);} .btn.secondary{background:#eef7f8; color:var(--accent); box-shadow:none; border:1px solid #d9eaed;}
+    .btn:active{transform:translateY(1px);}
+    .btn.secondary{background:#eef7f8; color:var(--accent); box-shadow:none; border:1px solid #d9eaed;}
+
+    /* ボタン行（コピー / リセット / 印刷） */
+    .btn-row{display:flex; gap:8px;}
+    .btn-row .btn{flex:1; padding:12px 10px; font-size:15px;}
 
     /* 結果表示 */
     .result{text-align:center; margin-top:16px;}
@@ -114,8 +119,12 @@
       <div class="field">
         <button id="calc" class="btn" type="button">売上相当額を計算</button>
       </div>
-      <div class="field">
-        <button id="reset" class="btn secondary" type="button">リセット</button>
+
+      <!-- コピー / リセット / 印刷 の横並び -->
+      <div class="field btn-row">
+        <button id="copy" class="btn secondary" type="button" aria-label="結果をコピー">コピー</button>
+        <button id="reset" class="btn secondary" type="button" aria-label="入力をリセット">リセット</button>
+        <button id="print" class="btn secondary" type="button" aria-label="印刷">印刷</button>
       </div>
 
       <div class="result" id="resultArea" hidden>
@@ -130,7 +139,7 @@
     </section>
 
     <footer>
-      Copyright (c) <span id="yyyy"></span> 税理士法人松本会計事務所 All Rights Reserved. / r8
+      Copyright (c) <span id="yyyy"></span> 税理士法人松本会計事務所 All Rights Reserved. / r9
     </footer>
   </div>
 
@@ -146,6 +155,10 @@
     const resultArea = $('#resultArea');
     const salesEl = $('#sales');
     const statementEl = $('#statement');
+
+    const copyBtn = $('#copy');
+    const resetBtn = $('#reset');
+    const printBtn = $('#print');
 
     $('#yyyy').textContent = String(new Date().getFullYear());
 
@@ -173,16 +186,14 @@
     });
     spendRange.dispatchEvent(new Event('input')); // 初期同期
 
-    // ===== 限界利益率 入力体験の改善 =====
-    // スライダー → 入力（入力欄にフォーカスがある間は上書きしない）
+    // ===== 限界利益率 入力体験（削除しやすいよう上書き抑止） =====
     function syncCmrFromSlider(){
-      if(document.activeElement === cmrInput) return;
+      if(document.activeElement === cmrInput) return; // 入力中は上書きしない
       cmrInput.value = Number(cmrRange.value).toFixed(1);
     }
     cmrRange.addEventListener('input', syncCmrFromSlider);
     syncCmrFromSlider();
 
-    // 入力確定
     function commitCmrInput(){
       const min = Number(cmrRange.min), max = Number(cmrRange.max);
       const v = parsePct(cmrInput.value);
@@ -192,7 +203,6 @@
       cmrInput.value = clamped.toFixed(1);
     }
 
-    // 入力中：可能ならスライダーへ反映（空欄は許容）
     cmrInput.addEventListener('input', ()=>{
       const v = parsePct(cmrInput.value);
       const min = Number(cmrRange.min), max = Number(cmrRange.max);
@@ -202,13 +212,13 @@
     });
     cmrInput.addEventListener('blur', commitCmrInput);
 
-    // 業種チップ（入力欄がフォーカスでも強制反映）
+    // 業種チップ
     document.querySelectorAll('.chip-grid .chip').forEach(btn=>{
       btn.addEventListener('click', ()=>{
         const v = Number(btn.dataset.pct);
         cmrRange.value = v.toFixed(1);
-        cmrInput.value = v.toFixed(1);   // ← 直接反映（sync関数に依存しない）
-        cmrInput.blur();                  // ← 不要なフォーカスで阻害されないように
+        cmrInput.value = v.toFixed(1);
+        cmrInput.blur();
       });
     });
 
@@ -230,11 +240,36 @@
     cmrInput.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); calc(); }});
     spendEl.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); calc(); }});
 
+    // コピー
+    async function handleCopy(){
+      if(resultArea.hidden){ calc(); if(resultArea.hidden) return; }
+      const text = `御社の売上相当額: ${salesEl.textContent}\n${statementEl.textContent}`;
+      try{
+        if(navigator.clipboard && navigator.clipboard.writeText){
+          await navigator.clipboard.writeText(text);
+        }else{
+          const ta = document.createElement('textarea');
+          ta.value = text; document.body.appendChild(ta);
+          ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+        }
+        alert('結果をコピーしました。');
+      }catch(e){
+        alert('コピーに失敗しました。手動で選択してください。');
+      }
+    }
+    copyBtn.addEventListener('click', handleCopy);
+
     // リセット（初期値へ）
-    $('#reset').addEventListener('click', ()=>{
+    resetBtn.addEventListener('click', ()=>{
       spendRange.value = 100000; spendRange.dispatchEvent(new Event('input'));
       cmrRange.value = 54.7; cmrInput.value = '54.7';
       resultArea.hidden = true; window.scrollTo({top:0, behavior:'smooth'});
+    });
+
+    // 印刷
+    printBtn.addEventListener('click', ()=>{
+      if(resultArea.hidden){ calc(); }
+      window.print();
     });
   </script>
 </body>
