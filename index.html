@@ -55,7 +55,8 @@
     .btn.secondary{background:#eef7f8; color:var(--accent); box-shadow:none; border:1px solid #d9eaed;}
 
     /* ボタン行（コピー / リセット / 印刷） */
-    .btn-row{display:flex; gap:8px; margin-top:12px;}
+    .btn-row{display:none; gap:8px; margin-top:12px;}
+    .btn-row.show{display:flex;}
     .btn-row .btn{flex:1; padding:12px 10px; font-size:15px;}
 
     /* 結果表示 */
@@ -95,7 +96,6 @@
         <div class="label big">② 御社の限界利益率（％）</div>
         <div class="helper">※変動損益計算書もしくは月次決算速報サービスにてご確認ください</div>
         <div class="range-row">
-          <!-- 5.0% 〜 95.0% -->
           <input id="cmr" type="range" min="5" max="95" step="0.1" value="54.7" aria-label="限界利益率スライダー" />
           <div class="pctbox">
             <input id="cmrInput" class="pct" type="text" inputmode="decimal" value="54.7" aria-label="限界利益率(直接入力)" />
@@ -103,9 +103,7 @@
           </div>
         </div>
 
-        <!-- 参考見出し -->
         <div class="ref-title">参考：産業ごとの全国平均</div>
-        <!-- 業種チップ -->
         <div class="chip-grid" aria-label="業種プリセット">
           <button class="chip" type="button" data-pct="54.7"><span class="nm">全産業</span><span class="val">54.7%</span></button>
           <button class="chip" type="button" data-pct="65.7"><span class="nm">漁業</span><span class="val">65.7%</span></button>
@@ -134,7 +132,7 @@
       </div>
 
       <!-- コピー / リセット / 印刷（＝結果表示の下。初期は非表示） -->
-      <div class="btn-row" id="actionRow" hidden>
+      <div class="btn-row" id="actionRow">
         <button id="copy" class="btn secondary" type="button" aria-label="結果をコピー">コピー</button>
         <button id="reset" class="btn secondary" type="button" aria-label="入力をリセット">リセット</button>
         <button id="print" class="btn secondary" type="button" aria-label="印刷">印刷</button>
@@ -142,7 +140,7 @@
     </section>
 
     <footer>
-      Copyright (c) <span id="yyyy"></span> 税理士法人松本会計事務所 All Rights Reserved. / r11
+      Copyright (c) <span id="yyyy"></span> 税理士法人松本会計事務所 All Rights Reserved. / r12
     </footer>
   </div>
 
@@ -176,23 +174,21 @@
     }
     function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
 
-    // 支出額：スライダー → 入力欄
+    // 支出額：双方向同期
     spendRange.addEventListener('input', ()=>{
-      const val = Number(spendRange.value);
-      spendEl.value = formatPlainJPY(val);
+      spendEl.value = formatPlainJPY(Number(spendRange.value));
     });
-    // 支出額：入力欄 → スライダー
     spendEl.addEventListener('input', (e)=>{
       const raw = parseMoney(e.target.value);
       if(isNaN(raw)) return;
       e.target.value = formatPlainJPY(raw);
       spendRange.value = clamp(raw, Number(spendRange.min), Number(spendRange.max));
     });
-    spendRange.dispatchEvent(new Event('input')); // 初期同期
+    spendRange.dispatchEvent(new Event('input'));
 
-    // ===== 限界利益率 入力体験（削除しやすいよう上書き抑止） =====
+    // 限界利益率：入力体験（削除しやすいよう上書き抑止）
     function syncCmrFromSlider(){
-      if(document.activeElement === cmrInput) return; // 入力中は上書きしない
+      if(document.activeElement === cmrInput) return;
       cmrInput.value = Number(cmrRange.value).toFixed(1);
     }
     cmrRange.addEventListener('input', syncCmrFromSlider);
@@ -206,7 +202,6 @@
       cmrRange.value = clamped.toFixed(1);
       cmrInput.value = clamped.toFixed(1);
     }
-
     cmrInput.addEventListener('input', ()=>{
       const v = parsePct(cmrInput.value);
       const min = Number(cmrRange.min), max = Number(cmrRange.max);
@@ -226,7 +221,7 @@
       });
     });
 
-    // テキストを1行に収める（statement）
+    // 1行に収める（statement）
     function fitToOneLine(el, maxPx=21, minPx=14){
       el.style.fontSize = maxPx + 'px';
       let size = maxPx;
@@ -250,7 +245,7 @@
       salesEl.textContent = formatJPY(salesNeeded);
       statementEl.textContent = `${formatJPY(spend)} の支出は、御社の売上 ${formatJPY(salesNeeded)} に相当します。`;
       resultArea.hidden = false;
-      actionRow.hidden = false;           // ← 計算後にボタン群を表示
+      actionRow.classList.add('show');     // ← 計算後にボタン群を表示
       fitToOneLine(statementEl);
       resultArea.scrollIntoView({behavior:'smooth', block:'center'});
     }
@@ -282,7 +277,7 @@
       spendRange.value = 100000; spendRange.dispatchEvent(new Event('input'));
       cmrRange.value = 54.7; cmrInput.value = '54.7';
       resultArea.hidden = true;
-      actionRow.hidden = true;            // ← リセット時はボタン群を非表示に戻す
+      actionRow.classList.remove('show');  // ← リセットで非表示に戻す
       window.scrollTo({top:0, behavior:'smooth'});
     });
 
