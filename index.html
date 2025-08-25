@@ -62,11 +62,18 @@
     /* 結果表示 */
     .result{text-align:center; margin-top:16px;}
     .result .label{font-size:16px; font-weight:800; color:#324245;}
-    .amount{font-size:clamp(24px,7.5vw,36px); font-weight:900; color:var(--accent); margin:8px 0 6px;
-      font-feature-settings:"tnum"; font-variant-numeric:tabular-nums; white-space:nowrap;}
-    .statement{margin-top:12px; font-size:21px; font-weight:900; line-height:1.45;
-      color:#0f2022; background:#e9f6f8; border:1px dashed var(--accent-2); padding:12px; border-radius:12px;
-      white-space:nowrap; overflow:hidden;}
+    .amount{font-size:clamp(24px,7.5vw,36px); font-weight:900; color:#2f7f86; margin:8px 0 6px; font-feature-settings:"tnum"; font-variant-numeric:tabular-nums;}
+
+    /* 2行レイアウトのステートメント（途中切れ防止） */
+    .statement{
+      margin-top:12px; background:#e9f6f8; border:1px dashed var(--accent-2); border-radius:12px;
+      padding:12px; color:#0f2022;
+      font-weight:900; line-height:1.6; font-size:clamp(16px, 4.8vw, 22px);
+      white-space:normal; overflow:visible; word-break:keep-all;
+    }
+    .statement .stmt-top{display:block;}
+    .statement .stmt-bottom{display:block; margin-top:4px;}
+
     .note{margin-top:10px; color:var(--muted); font-size:12px;}
     footer{margin:18px 4px 6px; text-align:center; color:#667; font-size:11px;}
   </style>
@@ -117,7 +124,7 @@
       </div>
 
       <div class="field">
-        <button id="calc" class="btn" type="button">売上相当額を計算</button>
+        <button id="calc" class="btn" type="button">御社の売上相当額を計算</button>
       </div>
 
       <!-- 結果表示 -->
@@ -140,7 +147,7 @@
     </section>
 
     <footer>
-      Copyright (c) <span id="yyyy"></span> 税理士法人松本会計事務所 All Rights Reserved. / r12
+      Copyright (c) <span id="yyyy"></span> 税理士法人松本会計事務所 All Rights Reserved. / r13
     </footer>
   </div>
 
@@ -149,7 +156,6 @@
 
     const spendEl = $('#spend');
     const spendRange = $('#spendRange');
-
     const cmrRange = $('#cmr');
     const cmrInput = $('#cmrInput');
 
@@ -167,32 +173,21 @@
     function parseMoney(text){ if(!text) return NaN; return Number(String(text).replace(/[^\d.-]/g,'')); }
     function formatJPY(n){ return n.toLocaleString('ja-JP',{style:'currency',currency:'JPY',maximumFractionDigits:0}); }
     function formatPlainJPY(n){ return n.toLocaleString('ja-JP',{maximumFractionDigits:0}); }
-    function parsePct(text){
-      if(text==null) return NaN;
-      const t = String(text).replace('%','').replace(',', '.').trim();
-      return Number(t);
-    }
+    function parsePct(text){ if(text==null) return NaN; const t = String(text).replace('%','').replace(',', '.').trim(); return Number(t); }
     function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
 
     // 支出額：双方向同期
-    spendRange.addEventListener('input', ()=>{
-      spendEl.value = formatPlainJPY(Number(spendRange.value));
-    });
+    spendRange.addEventListener('input', ()=>{ spendEl.value = formatPlainJPY(Number(spendRange.value)); });
     spendEl.addEventListener('input', (e)=>{
-      const raw = parseMoney(e.target.value);
-      if(isNaN(raw)) return;
+      const raw = parseMoney(e.target.value); if(isNaN(raw)) return;
       e.target.value = formatPlainJPY(raw);
       spendRange.value = clamp(raw, Number(spendRange.min), Number(spendRange.max));
     });
     spendRange.dispatchEvent(new Event('input'));
 
-    // 限界利益率：入力体験（削除しやすいよう上書き抑止）
-    function syncCmrFromSlider(){
-      if(document.activeElement === cmrInput) return;
-      cmrInput.value = Number(cmrRange.value).toFixed(1);
-    }
-    cmrRange.addEventListener('input', syncCmrFromSlider);
-    syncCmrFromSlider();
+    // 限界利益率：入力体験
+    function syncCmrFromSlider(){ if(document.activeElement === cmrInput) return; cmrInput.value = Number(cmrRange.value).toFixed(1); }
+    cmrRange.addEventListener('input', syncCmrFromSlider); syncCmrFromSlider();
 
     function commitCmrInput(){
       const min = Number(cmrRange.min), max = Number(cmrRange.max);
@@ -203,11 +198,8 @@
       cmrInput.value = clamped.toFixed(1);
     }
     cmrInput.addEventListener('input', ()=>{
-      const v = parsePct(cmrInput.value);
-      const min = Number(cmrRange.min), max = Number(cmrRange.max);
-      if(!isNaN(v) && v>=min && v<=max){
-        cmrRange.value = Number(v).toFixed(1);
-      }
+      const v = parsePct(cmrInput.value), min = Number(cmrRange.min), max = Number(cmrRange.max);
+      if(!isNaN(v) && v>=min && v<=max) cmrRange.value = Number(v).toFixed(1);
     });
     cmrInput.addEventListener('blur', commitCmrInput);
 
@@ -221,18 +213,6 @@
       });
     });
 
-    // 1行に収める（statement）
-    function fitToOneLine(el, maxPx=21, minPx=14){
-      el.style.fontSize = maxPx + 'px';
-      let size = maxPx;
-      const boxWidth = el.clientWidth;
-      while (el.scrollWidth > boxWidth && size > minPx){
-        size -= 0.5;
-        el.style.fontSize = size + 'px';
-      }
-    }
-    window.addEventListener('resize', ()=>{ if(!resultArea.hidden){ fitToOneLine(statementEl); } });
-
     // 計算
     function calc(){
       commitCmrInput();
@@ -242,11 +222,16 @@
       if(isNaN(pct) || pct <= 0){ alert('限界利益率を正しく入力してください。'); cmrInput.focus(); return; }
       const rate = pct / 100;
       const salesNeeded = Math.ceil(spend / rate);
+
       salesEl.textContent = formatJPY(salesNeeded);
-      statementEl.textContent = `${formatJPY(spend)} の支出は、御社の売上 ${formatJPY(salesNeeded)} に相当します。`;
+
+      // 2行構成にして途中切れ防止
+      statementEl.innerHTML =
+        `<span class="stmt-top">${formatJPY(spend)} の支出は、</span>` +
+        `<span class="stmt-bottom">御社の売上 ${formatJPY(salesNeeded)} に相当します。</span>`;
+
       resultArea.hidden = false;
-      actionRow.classList.add('show');     // ← 計算後にボタン群を表示
-      fitToOneLine(statementEl);
+      actionRow.classList.add('show');   // 計算後にボタン群を表示
       resultArea.scrollIntoView({behavior:'smooth', block:'center'});
     }
     $('#calc').addEventListener('click', calc);
@@ -266,9 +251,7 @@
           ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
         }
         alert('結果をコピーしました。');
-      }catch(e){
-        alert('コピーに失敗しました。手動で選択してください。');
-      }
+      }catch(e){ alert('コピーに失敗しました。手動で選択してください。'); }
     }
     copyBtn.addEventListener('click', handleCopy);
 
@@ -277,7 +260,7 @@
       spendRange.value = 100000; spendRange.dispatchEvent(new Event('input'));
       cmrRange.value = 54.7; cmrInput.value = '54.7';
       resultArea.hidden = true;
-      actionRow.classList.remove('show');  // ← リセットで非表示に戻す
+      actionRow.classList.remove('show');
       window.scrollTo({top:0, behavior:'smooth'});
     });
 
