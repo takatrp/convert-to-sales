@@ -55,15 +55,17 @@
     .btn.secondary{background:#eef7f8; color:var(--accent); box-shadow:none; border:1px solid #d9eaed;}
 
     /* ボタン行（コピー / リセット / 印刷） */
-    .btn-row{display:flex; gap:8px;}
+    .btn-row{display:flex; gap:8px; margin-top:12px;}
     .btn-row .btn{flex:1; padding:12px 10px; font-size:15px;}
 
     /* 結果表示 */
     .result{text-align:center; margin-top:16px;}
     .result .label{font-size:16px; font-weight:800; color:#324245;}
-    .amount{font-size:clamp(24px,7.5vw,36px); font-weight:900; color:var(--accent); margin:8px 0 6px; font-feature-settings:"tnum"; font-variant-numeric:tabular-nums;}
-    .statement{margin-top:12px; font-size:clamp(17px,5.2vw,21px); font-weight:900; line-height:1.5; color:#0f2022;
-      background:#e9f6f8; border:1px dashed var(--accent-2); padding:12px; border-radius:12px;}
+    .amount{font-size:clamp(24px,7.5vw,36px); font-weight:900; color:var(--accent); margin:8px 0 6px;
+      font-feature-settings:"tnum"; font-variant-numeric:tabular-nums; white-space:nowrap;}
+    .statement{margin-top:12px; font-size:21px; font-weight:900; line-height:1.45; /* 基準値 */
+      color:#0f2022; background:#e9f6f8; border:1px dashed var(--accent-2); padding:12px; border-radius:12px;
+      white-space:nowrap; overflow:hidden;} /* 必ず1行に */
     .note{margin-top:10px; color:var(--muted); font-size:12px;}
     footer{margin:18px 4px 6px; text-align:center; color:#667; font-size:11px;}
   </style>
@@ -120,13 +122,7 @@
         <button id="calc" class="btn" type="button">売上相当額を計算</button>
       </div>
 
-      <!-- コピー / リセット / 印刷 の横並び -->
-      <div class="field btn-row">
-        <button id="copy" class="btn secondary" type="button" aria-label="結果をコピー">コピー</button>
-        <button id="reset" class="btn secondary" type="button" aria-label="入力をリセット">リセット</button>
-        <button id="print" class="btn secondary" type="button" aria-label="印刷">印刷</button>
-      </div>
-
+      <!-- 結果表示 -->
       <div class="result" id="resultArea" hidden>
         <div class="label big">御社の売上相当額</div>
         <div class="amount" id="sales"></div>
@@ -136,10 +132,17 @@
           ※各産業平均は令和7年版TKC経営指標（BAST）を参照しています。
         </div>
       </div>
+
+      <!-- コピー / リセット / 印刷（＝結果表示の下に配置） -->
+      <div class="btn-row">
+        <button id="copy" class="btn secondary" type="button" aria-label="結果をコピー">コピー</button>
+        <button id="reset" class="btn secondary" type="button" aria-label="入力をリセット">リセット</button>
+        <button id="print" class="btn secondary" type="button" aria-label="印刷">印刷</button>
+      </div>
     </section>
 
     <footer>
-      Copyright (c) <span id="yyyy"></span> 税理士法人松本会計事務所 All Rights Reserved. / r9
+      Copyright (c) <span id="yyyy"></span> 税理士法人松本会計事務所 All Rights Reserved. / r10
     </footer>
   </div>
 
@@ -222,6 +225,21 @@
       });
     });
 
+    // テキストを1行に収める（statement）
+    function fitToOneLine(el, maxPx=21, minPx=14){
+      // いったん基準サイズに戻す
+      el.style.fontSize = maxPx + 'px';
+      // はみ出す間は0.5pxずつ縮小
+      let size = maxPx;
+      const boxWidth = el.clientWidth;
+      while (el.scrollWidth > boxWidth && size > minPx){
+        size -= 0.5;
+        el.style.fontSize = size + 'px';
+      }
+    }
+    // リサイズ時にも再調整
+    window.addEventListener('resize', ()=>{ if(!resultArea.hidden){ fitToOneLine(statementEl); } });
+
     // 計算
     function calc(){
       commitCmrInput();
@@ -234,6 +252,8 @@
       salesEl.textContent = formatJPY(salesNeeded);
       statementEl.textContent = `${formatJPY(spend)} の支出は、御社の売上 ${formatJPY(salesNeeded)} に相当します。`;
       resultArea.hidden = false;
+      // 6桁金額でも2段にならないよう調整
+      fitToOneLine(statementEl);
       resultArea.scrollIntoView({behavior:'smooth', block:'center'});
     }
     $('#calc').addEventListener('click', calc);
