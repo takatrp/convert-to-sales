@@ -67,6 +67,12 @@
     .statement .stmt-top{display:block;}
     .statement .stmt-bottom{display:block; margin-top:4px;}
 
+    /* 平均単価 & 追加売上内訳 */
+    .metrics{margin-top:12px; text-align:left;}
+    .metrics .headline{font-size:clamp(18px,5vw,22px); font-weight:900; color:#0f2022;}
+    .metrics .sub{margin-top:6px; color:#2b3a3d; font-size:14px;}
+    .metrics .sub b{font-weight:900;}
+    .avg-field{margin-top:10px;}
     .note{margin-top:10px; color:#6a7a7d; font-size:12px;}
     footer{margin:18px 4px 6px; text-align:center; color:#667; font-size:11px;}
   </style>
@@ -79,30 +85,26 @@
     </header>
 
     <section class="card" aria-label="入力">
+      <!-- ① 支出額 -->
       <div class="field">
         <div class="label big">① 支出額（円）</div>
-        <div class="range-row" title="支出額スライダー">
+        <div class="range-row">
           <input id="spendRange" type="range" min="0" max="1000000" step="1000" value="100000" />
-          <div class="yen-input compact">
-            <span class="prefix">¥</span>
-            <input id="spend" class="money" type="text" inputmode="numeric" value="100,000" autocomplete="off" />
-          </div>
+          <div class="yen-input"><span class="prefix">¥</span><input id="spend" class="money" type="text" inputmode="numeric" value="100,000" autocomplete="off" /></div>
         </div>
       </div>
 
+      <!-- ② 限界利益率 -->
       <div class="field">
         <div class="label big">② 御社の限界利益率（％）</div>
         <div class="helper">※変動損益計算書もしくは月次決算速報サービスにてご確認ください</div>
         <div class="range-row">
-          <input id="cmr" type="range" min="5" max="95" step="0.1" value="54.7" aria-label="限界利益率スライダー" />
-          <div class="pctbox">
-            <input id="cmrInput" class="pct" type="text" inputmode="decimal" value="54.7" aria-label="限界利益率(直接入力)" />
-            <span class="unit">%</span>
-          </div>
+          <input id="cmr" type="range" min="5" max="95" step="0.1" value="54.7" />
+          <div class="pctbox"><input id="cmrInput" class="pct" type="text" inputmode="decimal" value="54.7" /><span class="unit">%</span></div>
         </div>
 
         <div class="ref-title">参考：産業ごとの全国平均</div>
-        <div class="chip-grid" aria-label="業種プリセット">
+        <div class="chip-grid">
           <button class="chip" type="button" data-pct="54.7"><span class="nm">全産業</span><span class="val">54.7%</span></button>
           <button class="chip" type="button" data-pct="65.7"><span class="nm">漁業</span><span class="val">65.7%</span></button>
           <button class="chip" type="button" data-pct="48.0"><span class="nm">建設業</span><span class="val">48.0%</span></button>
@@ -118,47 +120,61 @@
         <button id="calc" class="btn" type="button">御社の売上相当額を計算</button>
       </div>
 
+      <!-- 結果表示 -->
       <div class="result" id="resultArea" hidden>
         <div class="label big">御社の売上相当額</div>
         <div class="amount" id="sales"></div>
         <div class="statement" id="statement"></div>
+
+        <!-- 平均単価入力 + 追加売上内訳 -->
+        <div class="avg-field" id="avgField" hidden>
+          <div class="label big">平均単価（円）</div>
+          <div class="yen-input"><span class="prefix">¥</span><input id="avgPrice" class="money" type="text" inputmode="numeric" placeholder="例：10,000" /></div>
+        </div>
+
+        <div class="metrics" id="metrics" hidden>
+          <div class="headline"><span id="monthlyNeed"></span> <span>/ 月 の追加売上が必要</span></div>
+          <div class="sub">＝ 一日あたり <b id="dailyNeed"></b> <span>/ 25営業日</span></div>
+          <div class="sub">＝ 必要販売数/日： <b id="unitsPerDay">—</b></div>
+        </div>
+
         <div class="note">
           ※ 計算式：<b>御社の売上相当額 ＝ 支出額 ÷（限界利益率 / 100）</b><br>
           ※各産業平均は令和7年版TKC経営指標（BAST）を参照しています。
         </div>
       </div>
 
+      <!-- コピー / リセット / 印刷（計算後に表示） -->
       <div class="btn-row" id="actionRow">
-        <button id="copy" class="btn secondary" type="button" aria-label="結果をコピー">コピー</button>
-        <button id="reset" class="btn secondary" type="button" aria-label="入力をリセット">リセット</button>
-        <button id="print" class="btn secondary" type="button" aria-label="印刷">印刷</button>
+        <button id="copy" class="btn secondary" type="button">コピー</button>
+        <button id="reset" class="btn secondary" type="button">リセット</button>
+        <button id="print" class="btn secondary" type="button">印刷</button>
       </div>
     </section>
 
     <footer>
-      Copyright (c) <span id="yyyy"></span> 税理士法人松本会計事務所 All Rights Reserved. / r14
+      Copyright (c) <span id="yyyy"></span> 税理士法人松本会計事務所 All Rights Reserved. / r15
     </footer>
   </div>
 
   <script>
     const $ = (s)=>document.querySelector(s);
 
-    const spendEl = $('#spend');
-    const spendRange = $('#spendRange');
-    const cmrRange = $('#cmr');
-    const cmrInput = $('#cmrInput');
-
+    const spendEl = $('#spend'), spendRange = $('#spendRange');
+    const cmrRange = $('#cmr'), cmrInput = $('#cmrInput');
     const resultArea = $('#resultArea');
-    const salesEl = $('#sales');
-    const statementEl = $('#statement');
-
+    const salesEl = $('#sales'), statementEl = $('#statement');
     const actionRow = $('#actionRow');
-    const copyBtn = $('#copy');
-    const resetBtn = $('#reset');
-    const printBtn = $('#print');
+    const copyBtn = $('#copy'), resetBtn = $('#reset'), printBtn = $('#print');
+
+    const avgField = $('#avgField'), avgPriceEl = $('#avgPrice'), metrics = $('#metrics');
+    const monthlyNeedEl = $('#monthlyNeed'), dailyNeedEl = $('#dailyNeed'), unitsPerDayEl = $('#unitsPerDay');
 
     const STORAGE_KEY_CMR = 'cmrPct_v1';
     const DEFAULT_CMR = 54.7;
+    const BUSINESS_DAYS = 25;
+
+    let lastSalesNeeded = 0;
 
     $('#yyyy').textContent = String(new Date().getFullYear());
 
@@ -168,86 +184,76 @@
     function parsePct(text){ if(text==null) return NaN; const t = String(text).replace('%','').replace(',', '.').trim(); return Number(t); }
     function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
 
-    // ===== 限界利益率 永続化 =====
-    function loadCmr(){
-      try{
-        const raw = localStorage.getItem(STORAGE_KEY_CMR);
-        const v = parsePct(raw);
-        if(!isNaN(v)) return clamp(Number(v), Number(cmrRange.min), Number(cmrRange.max));
-      }catch(_){}
-      return DEFAULT_CMR;
-    }
-    function saveCmr(v){
-      try{ localStorage.setItem(STORAGE_KEY_CMR, Number(v).toFixed(1)); }catch(_){}
-    }
+    // CMR 永続化
+    function loadCmr(){ try{ const v=parsePct(localStorage.getItem(STORAGE_KEY_CMR)); if(!isNaN(v)) return clamp(v, +cmrRange.min, +cmrRange.max);}catch{} return DEFAULT_CMR; }
+    function saveCmr(v){ try{ localStorage.setItem(STORAGE_KEY_CMR, Number(v).toFixed(1)); }catch{} }
 
-    // 初期化：支出額同期 & 限界利益率を復元
-    spendRange.addEventListener('input', ()=>{ spendEl.value = formatPlainJPY(Number(spendRange.value)); });
-    spendEl.addEventListener('input', (e)=>{
-      const raw = parseMoney(e.target.value); if(isNaN(raw)) return;
-      e.target.value = formatPlainJPY(raw);
-      spendRange.value = clamp(raw, Number(spendRange.min), Number(spendRange.max));
-    });
+    // 支出額 双方向
+    spendRange.addEventListener('input', ()=>{ spendEl.value = formatPlainJPY(+spendRange.value); });
+    spendEl.addEventListener('input', (e)=>{ const raw=parseMoney(e.target.value); if(isNaN(raw)) return; e.target.value=formatPlainJPY(raw); spendRange.value = clamp(raw, +spendRange.min, +spendRange.max); });
     spendRange.dispatchEvent(new Event('input'));
 
     // CMR 初期復元
     const initCmr = loadCmr();
-    cmrRange.value = Number(initCmr).toFixed(1);
-    cmrInput.value = Number(initCmr).toFixed(1);
+    cmrRange.value = initCmr.toFixed(1);
+    cmrInput.value = initCmr.toFixed(1);
 
-    // 入力体験（削除しやすいよう上書き抑止）
-    function syncCmrFromSlider(){
-      if(document.activeElement === cmrInput) return;
-      const v = Number(cmrRange.value).toFixed(1);
-      cmrInput.value = v;
-      saveCmr(v); // スライダー操作時も保存
-    }
+    function syncCmrFromSlider(){ if(document.activeElement===cmrInput) return; const v=+cmrRange.value; cmrInput.value=v.toFixed(1); saveCmr(v); }
     cmrRange.addEventListener('input', syncCmrFromSlider);
 
     function commitCmrInput(){
-      const min = Number(cmrRange.min), max = Number(cmrRange.max);
       const v = parsePct(cmrInput.value);
-      if(isNaN(v)){ cmrInput.value = Number(cmrRange.value).toFixed(1); return; }
-      const clamped = clamp(v, min, max);
-      const f = clamped.toFixed(1);
-      cmrRange.value = f;
-      cmrInput.value = f;
-      saveCmr(f); // 直接入力確定時に保存
+      if(isNaN(v)){ cmrInput.value = (+cmrRange.value).toFixed(1); return; }
+      const clamped = clamp(v, +cmrRange.min, +cmrRange.max);
+      cmrRange.value = clamped.toFixed(1);
+      cmrInput.value = clamped.toFixed(1);
+      saveCmr(clamped);
     }
-    cmrInput.addEventListener('input', ()=>{
-      const v = parsePct(cmrInput.value), min = Number(cmrRange.min), max = Number(cmrRange.max);
-      if(!isNaN(v) && v>=min && v<=max){
-        cmrRange.value = Number(v).toFixed(1);
-      }
-    });
+    cmrInput.addEventListener('input', ()=>{ const v=parsePct(cmrInput.value); if(!isNaN(v)&&v>=+cmrRange.min&&v<=+cmrRange.max){ cmrRange.value = v.toFixed(1);} });
     cmrInput.addEventListener('blur', commitCmrInput);
 
-    // 業種チップ（選択時に保存）
+    // 業種チップ
     document.querySelectorAll('.chip-grid .chip').forEach(btn=>{
-      btn.addEventListener('click', ()=>{
-        const v = Number(btn.dataset.pct);
-        const f = v.toFixed(1);
-        cmrRange.value = f;
-        cmrInput.value = f;
-        saveCmr(f);
-        cmrInput.blur();
-      });
+      btn.addEventListener('click', ()=>{ const v=+btn.dataset.pct; cmrRange.value=v.toFixed(1); cmrInput.value=v.toFixed(1); saveCmr(v); cmrInput.blur(); });
     });
+
+    // 平均単価の入力→再計算
+    function updateMetrics(){
+      if(!lastSalesNeeded) return;
+      const monthly = lastSalesNeeded; // 本ツールでは「御社の売上相当額」を月次として扱う
+      const daily = Math.floor(monthly / BUSINESS_DAYS);
+
+      monthlyNeedEl.textContent = formatJPY(monthly);
+      dailyNeedEl.textContent = formatJPY(daily);
+
+      const avg = parseMoney(avgPriceEl.value);
+      if(!isNaN(avg) && avg>0){
+        const units = daily / avg;
+        unitsPerDayEl.textContent = units.toFixed(1);
+      }else{
+        unitsPerDayEl.textContent = '—';
+      }
+    }
+    avgPriceEl.addEventListener('input', (e)=>{ const raw=parseMoney(e.target.value); if(isNaN(raw)){ e.target.value=''; updateMetrics(); return; } e.target.value = formatPlainJPY(raw); updateMetrics(); });
 
     // 計算
     function calc(){
-      commitCmrInput(); // 計算前に確定＆保存
+      commitCmrInput();
       const spend = parseMoney(spendEl.value);
       const pct = parsePct(cmrInput.value);
-      if(isNaN(spend) || spend <= 0){ alert('支出額を正しく入力してください。'); spendEl.focus(); return; }
-      if(isNaN(pct) || pct <= 0){ alert('限界利益率を正しく入力してください。'); cmrInput.focus(); return; }
-      const rate = pct / 100;
-      const salesNeeded = Math.ceil(spend / rate);
+      if(isNaN(spend) || spend<=0){ alert('支出額を正しく入力してください。'); spendEl.focus(); return; }
+      if(isNaN(pct) || pct<=0){ alert('限界利益率を正しく入力してください。'); cmrInput.focus(); return; }
 
-      salesEl.textContent = formatJPY(salesNeeded);
-      statementEl.innerHTML =
-        `<span class="stmt-top">${formatJPY(spend)} の支出は、</span>` +
-        `<span class="stmt-bottom">御社の売上 ${formatJPY(salesNeeded)} に相当します。</span>`;
+      const rate = pct / 100;
+      lastSalesNeeded = Math.ceil(spend / rate);
+
+      salesEl.textContent = formatJPY(lastSalesNeeded);
+      statementEl.innerHTML = `<span class="stmt-top">${formatJPY(spend)} の支出は、</span><span class="stmt-bottom">御社の売上 ${formatJPY(lastSalesNeeded)} に相当します。</span>`;
+
+      // 追加表示
+      avgField.hidden = false;
+      metrics.hidden = false;
+      updateMetrics();
 
       resultArea.hidden = false;
       actionRow.classList.add('show');
@@ -258,38 +264,31 @@
     spendEl.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); calc(); }});
 
     // コピー
-    async function handleCopy(){
-      if(resultArea.hidden){ calc(); if(resultArea.hidden) return; }
-      const text = `御社の売上相当額: ${salesEl.textContent}\n${statementEl.textContent.replace(/\s+/g,' ')}`;
+    copyBtn.addEventListener('click', async ()=>{
+      if(resultArea.hidden) return;
+      const avgTxt = avgPriceEl.value ? `\n平均単価: ¥${avgPriceEl.value}` : '';
+      const metricsTxt = metrics.hidden ? '' :
+        `\n${monthlyNeedEl.textContent} / 月 の追加売上が必要\n＝ 一日あたり ${dailyNeedEl.textContent} / ${BUSINESS_DAYS}営業日\n＝ 必要販売数/日： ${unitsPerDayEl.textContent}`;
+      const text = `御社の売上相当額: ${salesEl.textContent}\n${statementEl.textContent.replace(/\s+/g,' ')}${avgTxt}${metricsTxt}`;
       try{
-        if(navigator.clipboard && navigator.clipboard.writeText){
-          await navigator.clipboard.writeText(text);
-        }else{
-          const ta = document.createElement('textarea');
-          ta.value = text; document.body.appendChild(ta);
-          ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
-        }
-        alert('結果をコピーしました。');
-      }catch(e){ alert('コピーに失敗しました。手動で選択してください。'); }
-    }
-    copyBtn.addEventListener('click', handleCopy);
+        if(navigator.clipboard?.writeText) { await navigator.clipboard.writeText(text); alert('結果をコピーしました。'); }
+        else { const ta=document.createElement('textarea'); ta.value=text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); alert('結果をコピーしました。'); }
+      }catch{ alert('コピーに失敗しました。'); }
+    });
 
-    // リセット（初期値へ・保存も更新）
+    // リセット
     resetBtn.addEventListener('click', ()=>{
       spendRange.value = 100000; spendRange.dispatchEvent(new Event('input'));
-      cmrRange.value = DEFAULT_CMR.toFixed(1);
-      cmrInput.value = DEFAULT_CMR.toFixed(1);
-      saveCmr(DEFAULT_CMR);
-      resultArea.hidden = true;
+      const cmr0 = loadCmr(); cmrRange.value = cmr0.toFixed(1); cmrInput.value = cmr0.toFixed(1);
+      lastSalesNeeded = 0;
+      avgPriceEl.value = '';
+      resultArea.hidden = true; avgField.hidden = true; metrics.hidden = true;
       actionRow.classList.remove('show');
       window.scrollTo({top:0, behavior:'smooth'});
     });
 
     // 印刷
-    printBtn.addEventListener('click', ()=>{
-      if(resultArea.hidden){ calc(); }
-      window.print();
-    });
+    printBtn.addEventListener('click', ()=>{ if(resultArea.hidden){ return; } window.print(); });
   </script>
 </body>
 </html>
