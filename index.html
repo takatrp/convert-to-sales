@@ -6,18 +6,13 @@
   <title>それ、売上に直すといくらですか？</title>
   <meta name="theme-color" content="#2f7f86" />
   <style>
-    :root{
-      --bg:#f4f9fb; --card:#ffffff; --ink:#1e2a2d; --muted:#5a6a6d;
-      --accent:#2f7f86; --accent-2:#4ea4ad; --shadow:0 10px 30px rgba(35,80,90,.12);
-      --radius:16px;
-    }
+    :root{ --bg:#f4f9fb; --card:#ffffff; --ink:#1e2a2d; --muted:#5a6a6d;
+      --accent:#2f7f86; --accent-2:#4ea4ad; --shadow:0 10px 30px rgba(35,80,90,.12); --radius:16px;}
     html,body{height:100%;}
-    body{margin:0; font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN",
-      "Yu Gothic UI","YuGothic","Noto Sans JP","Segoe UI",Roboto,Arial,sans-serif;
+    body{margin:0; font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic UI","YuGothic","Noto Sans JP","Segoe UI",Roboto,Arial,sans-serif;
       background:var(--bg); color:var(--ink); -webkit-font-smoothing:antialiased;}
-    .wrap{padding:max(12px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right))
-           calc(16px + env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
-           max-width:560px; margin:0 auto;}
+    .wrap{padding:max(12px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) calc(16px + env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
+      max-width:560px; margin:0 auto;}
     header{padding:14px 10px 2px;}
     .title{font-weight:800; letter-spacing:.02em; line-height:1.25; font-size:clamp(20px,5.5vw,26px); margin:0 0 6px;}
     .subtitle{color:var(--muted); font-size:12px;}
@@ -56,20 +51,16 @@
     .result .label{font-size:16px; font-weight:800; color:#324245;}
     .amount{font-size:clamp(24px,7.5vw,36px); font-weight:900; color:#2f7f86; margin:8px 0 6px; font-feature-settings:"tnum"; font-variant-numeric:tabular-nums;}
 
-    .statement{
-      margin-top:12px; background:#e9f6f8; border:1px dashed var(--accent-2); border-radius:12px;
-      padding:12px; color:#0f2022; font-weight:900; line-height:1.6; font-size:clamp(16px, 4.8vw, 22px);
-      white-space:normal; overflow:visible; word-break:keep-all;
-    }
-    .statement .stmt-top{display:block;}
-    .statement .stmt-bottom{display:block; margin-top:4px;}
+    .statement{margin-top:12px; background:#e9f6f8; border:1px dashed var(--accent-2); border-radius:12px; padding:12px;
+      color:#0f2022; font-weight:900; line-height:1.6; font-size:clamp(16px, 4.8vw, 22px); white-space:normal; overflow:visible; word-break:keep-all;}
+    .statement .stmt-top{display:block;} .statement .stmt-bottom{display:block; margin-top:4px;}
 
-    /* 平均単価行（任意入力） */
+    /* 平均単価（任意）行 */
     .avgrow{margin-top:10px; display:flex; align-items:center; justify-content:space-between; gap:10px;}
     .avg-label{font-size:15px; font-weight:700; color:#324245;}
-    .yen-input.small .money{font-size:18px;} /* 少し小さめ */
+    .yen-input.small .money{font-size:16px;} /* 少し小さめ */
+    .yen-input.small input::placeholder{color:#7f8d91; opacity:.55; font-weight:500;} /* 薄く表示 */
 
-    /* 必要販売数のみ表示 */
     .metrics{margin-top:8px; text-align:left;}
     .metrics .only{color:#2b3a3d; font-size:15px;}
     .metrics .only b{font-weight:900;}
@@ -131,7 +122,8 @@
           <div class="avg-label">平均単価（任意）</div>
           <div class="yen-input small">
             <span class="prefix">¥</span>
-            <input id="avgPrice" class="money" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="例：10000" />
+            <!-- 重要：type="tel" + inputmode="numeric"、pattern削除 -->
+            <input id="avgPrice" class="money" type="tel" inputmode="numeric" placeholder="例：10,000" autocomplete="off" />
           </div>
         </div>
 
@@ -155,7 +147,7 @@
     </section>
 
     <footer>
-      Copyright (c) <span id="yyyy"></span> 税理士法人松本会計事務所 All Rights Reserved. / r16
+      Copyright (c) <span id="yyyy"></span> 税理士法人松本会計事務所 All Rights Reserved. / r17
     </footer>
   </div>
 
@@ -178,10 +170,10 @@
 
     $('#yyyy').textContent = String(new Date().getFullYear());
 
-    function parseMoney(text){ if(text===null||text===undefined) return NaN; return Number(String(text).replace(/[^\d.-]/g,'')); }
+    function parseMoney(t){ if(t===null||t===undefined) return NaN; return Number(String(t).replace(/[^\d.-]/g,'')); }
     function formatJPY(n){ return n.toLocaleString('ja-JP',{style:'currency',currency:'JPY',maximumFractionDigits:0}); }
     function formatPlainJPY(n){ return n.toLocaleString('ja-JP',{maximumFractionDigits:0}); }
-    function parsePct(text){ if(text==null) return NaN; const t = String(text).replace('%','').replace(',', '.').trim(); return Number(t); }
+    function parsePct(t){ if(t==null) return NaN; const s=String(t).replace('%','').replace(',', '.').trim(); return Number(s); }
     function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
 
     // CMR 保存/復元
@@ -212,31 +204,35 @@
       btn.addEventListener('click', ()=>{ const v=+btn.dataset.pct; cmrRange.value=v.toFixed(1); cmrInput.value=v.toFixed(1); saveCmr(v); cmrInput.blur(); });
     });
 
-    // 平均単価 入力体験（スマホ対策：入力中はカンマを付けない）
+    // 平均単価：スマホ入力対策
     function updateUnits(){
-      if(!lastSalesNeeded){ unitsNeededEl.textContent = '—'; return; }
+      if(!lastSalesNeeded){ unitsNeededEl.textContent='—'; return; }
       const avg = parseMoney(avgPriceEl.value);
       if(!isNaN(avg) && avg>0){
-        const units = lastSalesNeeded / avg;
-        unitsNeededEl.textContent = units.toFixed(1);
+        unitsNeededEl.textContent = (lastSalesNeeded / avg).toFixed(1);
       }else{
         unitsNeededEl.textContent = '—';
       }
     }
-    avgPriceEl.addEventListener('focus', ()=>{ // 編集開始時：カンマを外す
-      avgPriceEl.value = String(parseMoney(avgPriceEl.value) || '');
-    });
+    // 入力中は「数字以外を除去」のみ（カンマは付けない）
     avgPriceEl.addEventListener('input', (e)=>{
-      // 数字以外を除去（カンマは付けない）
-      const digits = e.target.value.replace(/[^\d]/g,'');
-      e.target.value = digits;
+      const pos = e.target.selectionStart;
+      const beforeLen = e.target.value.length;
+      e.target.value = e.target.value.replace(/[^\d]/g,'');
+      // キャレット位置の自然な維持
+      const afterLen = e.target.value.length;
+      const delta = beforeLen - afterLen;
+      const newPos = pos - (delta>0 ? delta : 0);
+      requestAnimationFrame(()=>{ e.target.setSelectionRange(newPos, newPos); });
       updateUnits();
     });
-    avgPriceEl.addEventListener('blur', (e)=>{ // 編集終了時：見た目だけ整形
+    // フォーカス外れたら見た目を整形
+    avgPriceEl.addEventListener('blur', (e)=>{
       const n = parseMoney(e.target.value);
       e.target.value = isNaN(n) || n<=0 ? '' : formatPlainJPY(n);
       updateUnits();
     });
+    // フォーカス時は数字のみのまま（何もしない）
 
     // 計算
     function calc(){
@@ -265,7 +261,7 @@
     spendEl.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); calc(); }});
 
     // コピー
-    copyBtn.addEventListener('click', async ()=>{
+    $('#copy').addEventListener('click', async ()=>{
       if(resultArea.hidden) return;
       const avgTxt = avgPriceEl.value ? `平均単価: ¥${avgPriceEl.value}` : '平均単価: 未入力';
       const text = `御社の売上相当額: ${salesEl.textContent}\n${statementEl.textContent.replace(/\s+/g,' ')}\n＝ 必要販売数： ${unitsNeededEl.textContent}\n${avgTxt}`;
@@ -276,11 +272,10 @@
     });
 
     // リセット
-    resetBtn.addEventListener('click', ()=>{
+    $('#reset').addEventListener('click', ()=>{
       spendRange.value = 100000; spendRange.dispatchEvent(new Event('input'));
       const cmr0 = loadCmr(); cmrRange.value = cmr0.toFixed(1); cmrInput.value = cmr0.toFixed(1);
-      lastSalesNeeded = 0;
-      avgPriceEl.value = '';
+      lastSalesNeeded = 0; avgPriceEl.value = '';
       resultArea.hidden = true; avgRow.hidden = true; metrics.hidden = true;
       unitsNeededEl.textContent = '—';
       actionRow.classList.remove('show');
@@ -288,7 +283,7 @@
     });
 
     // 印刷
-    printBtn.addEventListener('click', ()=>{ if(resultArea.hidden){ return; } window.print(); });
+    $('#print').addEventListener('click', ()=>{ if(resultArea.hidden){ return; } window.print(); });
   </script>
 </body>
 </html>
