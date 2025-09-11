@@ -58,8 +58,8 @@
     /* 平均単価（任意）行 */
     .avgrow{margin-top:10px; display:flex; align-items:center; justify-content:space-between; gap:10px;}
     .avg-label{font-size:15px; font-weight:700; color:#324245;}
-    .yen-input.small .money{font-size:16px;} /* 少し小さめ */
-    .yen-input.small input::placeholder{color:#7f8d91; opacity:.55; font-weight:500;} /* 薄く表示 */
+    .yen-input.small .money{font-size:16px;}
+    .yen-input.small input::placeholder{color:#7f8d91; opacity:.55; font-weight:500;}
 
     .metrics{margin-top:8px; text-align:left;}
     .metrics .only{color:#2b3a3d; font-size:15px;}
@@ -122,8 +122,8 @@
           <div class="avg-label">平均単価（任意）</div>
           <div class="yen-input small">
             <span class="prefix">¥</span>
-            <!-- 重要：type="tel" + inputmode="numeric"、pattern削除 -->
-            <input id="avgPrice" class="money" type="tel" inputmode="numeric" placeholder="例：10,000" autocomplete="off" />
+            <!-- 入力中は書き換えない：text + inputmode=numeric -->
+            <input id="avgPrice" class="money" type="text" inputmode="numeric" placeholder="例：10,000" autocomplete="off" />
           </div>
         </div>
 
@@ -147,7 +147,7 @@
     </section>
 
     <footer>
-      Copyright (c) <span id="yyyy"></span> 税理士法人松本会計事務所 All Rights Reserved. / r17
+      Copyright (c) <span id="yyyy"></span> 税理士法人松本会計事務所 All Rights Reserved. / r18
     </footer>
   </div>
 
@@ -165,7 +165,6 @@
 
     const STORAGE_KEY_CMR = 'cmrPct_v1';
     const DEFAULT_CMR = 54.7;
-
     let lastSalesNeeded = 0;
 
     $('#yyyy').textContent = String(new Date().getFullYear());
@@ -189,7 +188,6 @@
     const initCmr = loadCmr();
     cmrRange.value = initCmr.toFixed(1);
     cmrInput.value = initCmr.toFixed(1);
-
     function syncCmrFromSlider(){ if(document.activeElement===cmrInput) return; const v=+cmrRange.value; cmrInput.value=v.toFixed(1); saveCmr(v); }
     cmrRange.addEventListener('input', syncCmrFromSlider);
     function commitCmrInput(){
@@ -204,7 +202,7 @@
       btn.addEventListener('click', ()=>{ const v=+btn.dataset.pct; cmrRange.value=v.toFixed(1); cmrInput.value=v.toFixed(1); saveCmr(v); cmrInput.blur(); });
     });
 
-    // 平均単価：スマホ入力対策
+    // 平均単価：入力中は一切書き換えず、blur時のみ整形して計算
     function updateUnits(){
       if(!lastSalesNeeded){ unitsNeededEl.textContent='—'; return; }
       const avg = parseMoney(avgPriceEl.value);
@@ -214,25 +212,16 @@
         unitsNeededEl.textContent = '—';
       }
     }
-    // 入力中は「数字以外を除去」のみ（カンマは付けない）
-    avgPriceEl.addEventListener('input', (e)=>{
-      const pos = e.target.selectionStart;
-      const beforeLen = e.target.value.length;
-      e.target.value = e.target.value.replace(/[^\d]/g,'');
-      // キャレット位置の自然な維持
-      const afterLen = e.target.value.length;
-      const delta = beforeLen - afterLen;
-      const newPos = pos - (delta>0 ? delta : 0);
-      requestAnimationFrame(()=>{ e.target.setSelectionRange(newPos, newPos); });
-      updateUnits();
+    avgPriceEl.addEventListener('input', updateUnits);
+    avgPriceEl.addEventListener('focus', ()=>{
+      const n = parseMoney(avgPriceEl.value);
+      if(!isNaN(n) && n>0) avgPriceEl.value = String(n); // 既存のカンマを除去して編集しやすく
     });
-    // フォーカス外れたら見た目を整形
     avgPriceEl.addEventListener('blur', (e)=>{
       const n = parseMoney(e.target.value);
-      e.target.value = isNaN(n) || n<=0 ? '' : formatPlainJPY(n);
+      e.target.value = isNaN(n) || n<=0 ? '' : formatPlainJPY(n); // 見た目だけ整形
       updateUnits();
     });
-    // フォーカス時は数字のみのまま（何もしない）
 
     // 計算
     function calc(){
