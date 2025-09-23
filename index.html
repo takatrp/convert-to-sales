@@ -16,16 +16,14 @@
       --card:#ffffff;
       --ink:#1e2a2d;
       --muted:#5a6a6d;
-      /* ベーストーンを#578899に統一 */
-      --accent:#578899;
-      --accent-2:#7aa2b0; /* 少し明るめの同系色 */
+      --accent:#578899;   /* ベースカラー統一 */
+      --accent-2:#7aa2b0;
       --shadow:0 10px 30px rgba(35,80,90,.12);
       --radius:16px;
     }
     html,body{height:100%;}
     body{
-      margin:0;
-      font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic UI","YuGothic","Noto Sans JP","Segoe UI",Roboto,Arial,sans-serif;
+      margin:0; font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic UI","YuGothic","Noto Sans JP","Segoe UI",Roboto,Arial,sans-serif;
       background:var(--bg); color:var(--ink); -webkit-font-smoothing:antialiased;
     }
     .wrap{
@@ -37,8 +35,17 @@
     /* ヘッダー（ロゴ左、タイトル右） */
     header{padding:8px 6px 2px;}
     .brand{display:flex; align-items:center; gap:10px;}
-    .logo{height:30px; width:auto; object-fit:contain; flex:0 0 auto;}
-    .title{font-weight:800; letter-spacing:.02em; line-height:1.25; font-size:clamp(20px,5.5vw,26px); margin:0;}
+    .logo{height:48px; width:auto; object-fit:contain; flex:0 0 auto;}
+    .title{
+      flex:1; min-width:0;
+      font-weight:800; letter-spacing:.02em; line-height:1.2; margin:0;
+      /* 1行固定＆幅に応じて縮小して折り返し回避 */
+      white-space:nowrap;
+      font-size:clamp(16px, 4.6vw, 24px);
+    }
+    @media (max-width:360px){
+      .title{font-size:clamp(15px, 4.2vw, 20px);}
+    }
     .subtitle{color:var(--muted); font-size:12px; margin:6px 0 0 0;}
 
     .card{background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); padding:18px 16px; margin:12px 0 18px;}
@@ -97,7 +104,7 @@
 
     .note{margin-top:10px; color:#6a7a7d; font-size:12px;}
     footer{margin:18px 4px 6px; text-align:center; color:#667; font-size:11px;}
-    footer a{color:inherit; text-decoration:none;} /* 文字色は変えない */
+    footer a{color:inherit; text-decoration:underline; text-underline-offset:2px;}
   </style>
 </head>
 <body>
@@ -183,7 +190,7 @@
     <footer>
       Copyright (c) <span id="yyyy"></span>
       <a href="https://www.matsumoto-kaikei.or.jp/" target="_blank" rel="noopener">税理士法人松本会計事務所</a>
-      All Rights Reserved. / r20
+      All Rights Reserved. / r21
     </footer>
   </div>
 
