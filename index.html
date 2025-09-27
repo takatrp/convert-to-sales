@@ -16,7 +16,7 @@
       --card:#ffffff;
       --ink:#1e2a2d;
       --muted:#5a6a6d;
-      --accent:#578899;   /* ベースカラー統一 */
+      --accent:#578899;
       --accent-2:#7aa2b0;
       --shadow:0 10px 30px rgba(35,80,90,.12);
       --radius:16px;
@@ -39,7 +39,6 @@
     .title{
       flex:1; min-width:0;
       font-weight:800; letter-spacing:.02em; line-height:1.2; margin:0;
-      /* 1行固定＆幅に応じて縮小して折り返し回避 */
       white-space:nowrap;
       font-size:clamp(16px, 4.6vw, 24px);
     }
@@ -190,7 +189,7 @@
     <footer>
       Copyright (c) <span id="yyyy"></span>
       <a href="https://www.matsumoto-kaikei.or.jp/" target="_blank" rel="noopener">税理士法人松本会計事務所</a>
-      All Rights Reserved. / r21
+      All Rights Reserved. / r22
     </footer>
   </div>
 
@@ -243,42 +242,77 @@
       btn.addEventListener('click', ()=>{ const v=+btn.dataset.pct; cmrRange.value=v.toFixed(1); cmrInput.value=v.toFixed(1); saveCmr(v); cmrInput.blur(); });
     });
 
-    // 平均単価：①〜⑨/全角→半角、非数字除去
-    function normalizeNumericInput(str){
+    // ========= 平均単価：リアルタイム3桁カンマ（カーソル維持 & 正規化） =========
+    let composing = false;
+    avgPriceEl.addEventListener('compositionstart', ()=>composing=true);
+    avgPriceEl.addEventListener('compositionend', ()=>composing=false);
+
+    function toHalfWidthDigits(str){
       if(!str) return '';
+      // 全角 → 半角
       str = str.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
+      // ①〜⑨, ⓪ → 半角
       const map = {'⓪':'0','①':'1','②':'2','③':'3','④':'4','⑤':'5','⑥':'6','⑦':'7','⑧':'8','⑨':'9'};
-      str = str.replace(/[⓪①②③④⑤⑥⑦⑧⑨]/g, s => map[s] || s);
-      str = str.replace(/[^\d]/g,'');
-      return str;
+      return str.replace(/[⓪①②③④⑤⑥⑦⑧⑨]/g, s => map[s] || s);
     }
+    function digitsOnly(str){ return (str||'').replace(/[^\d]/g,''); }
+    function groupThousands(digits){
+      if(!digits) return '';
+      // 先頭の不要な0は除去（ただし "0" は残す）
+      digits = digits.replace(/^0+(?=\d)/, '');
+      return digits.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    }
+    function countDigits(str){ return (str.match(/\d/g)||[]).length; }
+    function caretFromDigits(formatted, n){
+      if(n<=0) return 0;
+      let seen=0;
+      for(let i=0;i<formatted.length;i++){
+        const ch = formatted[i];
+        if(ch>='0' && ch<='9'){ seen++; }
+        if(seen===n){ return i+1; }
+      }
+      return formatted.length;
+    }
+
+    function formatAvgInputRealtime(e){
+      if(composing) return; // IME変換中は触らない
+      const el = e.target;
+      const oldVal = String(el.value);
+      const caret = el.selectionStart ?? oldVal.length;
+
+      // カーソル左側の「数字の数」を数える（正規化後にカウント）
+      const left = oldVal.slice(0, caret);
+      const digitsBefore = countDigits(digitsOnly(toHalfWidthDigits(left)));
+
+      // 全体を正規化 → 数字だけ取り出し → カンマ付け
+      const raw = digitsOnly(toHalfWidthDigits(oldVal));
+      const formatted = groupThousands(raw);
+
+      // 変化なしなら何もしない
+      if(formatted === oldVal) { updateUnits(); return; }
+
+      el.value = formatted;
+
+      // 新しい文字列で、digitsBefore 個の数字の直後にキャレットを戻す
+      const newPos = caretFromDigits(formatted, digitsBefore);
+      // iOS対策：描画後にカーソル移動
+      requestAnimationFrame(()=>{ try{ el.setSelectionRange(newPos, newPos); }catch{} });
+
+      updateUnits();
+    }
+    avgPriceEl.addEventListener('input', formatAvgInputRealtime);
+
     function updateUnits(){
       if(!lastSalesNeeded){ unitsNeededEl.textContent='—'; return; }
       const avg = parseMoney(avgPriceEl.value);
-      if(!isNaN(avg) && avg>0){ unitsNeededEl.textContent = (lastSalesNeeded / avg).toFixed(1); }
-      else{ unitsNeededEl.textContent = '—'; }
-    }
-    avgPriceEl.addEventListener('input', (e)=>{
-      const v = e.target.value;
-      const norm = normalizeNumericInput(v);
-      if(v !== norm){
-        const atEnd = document.activeElement === e.target && e.target.selectionStart === v.length;
-        e.target.value = norm;
-        if(atEnd){ const L = e.target.value.length; requestAnimationFrame(()=>e.target.setSelectionRange(L, L)); }
+      if(!isNaN(avg) && avg>0){
+        unitsNeededEl.textContent = (lastSalesNeeded / avg).toFixed(1);
+      }else{
+        unitsNeededEl.textContent = '—';
       }
-      updateUnits();
-    });
-    avgPriceEl.addEventListener('focus', (e)=>{
-      const n = parseMoney(e.target.value);
-      if(!isNaN(n) && n>0) e.target.value = String(n);
-    });
-    avgPriceEl.addEventListener('blur', (e)=>{
-      const n = parseMoney(e.target.value);
-      e.target.value = isNaN(n) || n<=0 ? '' : formatPlainJPY(n);
-      updateUnits();
-    });
+    }
 
-    // 計算
+    // ========= 計算フロー =========
     function calc(){
       commitCmrInput();
       const spend = parseMoney(spendEl.value);
