@@ -12,39 +12,21 @@
 
   <style>
     :root{
-      --bg:#f4f9fb;
-      --card:#ffffff;
-      --ink:#1e2a2d;
-      --muted:#5a6a6d;
-      --accent:#578899;
-      --accent-2:#7aa2b0;
-      --shadow:0 10px 30px rgba(35,80,90,.12);
-      --radius:16px;
+      --bg:#f4f9fb; --card:#ffffff; --ink:#1e2a2d; --muted:#5a6a6d;
+      --accent:#578899; --accent-2:#7aa2b0; --shadow:0 10px 30px rgba(35,80,90,.12); --radius:16px;
     }
     html,body{height:100%;}
-    body{
-      margin:0; font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic UI","YuGothic","Noto Sans JP","Segoe UI",Roboto,Arial,sans-serif;
-      background:var(--bg); color:var(--ink); -webkit-font-smoothing:antialiased;
-    }
-    .wrap{
-      padding:max(12px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right))
-              calc(16px + env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
-      max-width:560px; margin:0 auto;
-    }
+    body{margin:0; font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic UI","YuGothic","Noto Sans JP","Segoe UI",Roboto,Arial,sans-serif;
+      background:var(--bg); color:var(--ink); -webkit-font-smoothing:antialiased;}
+    .wrap{padding:max(12px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) calc(16px + env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
+      max-width:560px; margin:0 auto;}
 
-    /* ヘッダー（ロゴ左、タイトル右） */
     header{padding:8px 6px 2px;}
     .brand{display:flex; align-items:center; gap:10px;}
+    .logo-link{display:inline-flex; line-height:0; text-decoration:none;}
     .logo{height:48px; width:auto; object-fit:contain; flex:0 0 auto;}
-    .title{
-      flex:1; min-width:0;
-      font-weight:800; letter-spacing:.02em; line-height:1.2; margin:0;
-      white-space:nowrap;
-      font-size:clamp(16px, 4.6vw, 24px);
-    }
-    @media (max-width:360px){
-      .title{font-size:clamp(15px, 4.2vw, 20px);}
-    }
+    .title{flex:1; min-width:0; font-weight:800; letter-spacing:.02em; line-height:1.2; margin:0; white-space:nowrap; font-size:clamp(16px, 4.6vw, 24px);}
+    @media (max-width:360px){ .title{font-size:clamp(15px, 4.2vw, 20px);} }
     .subtitle{color:var(--muted); font-size:12px; margin:6px 0 0 0;}
 
     .card{background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); padding:18px 16px; margin:12px 0 18px;}
@@ -57,7 +39,8 @@
     .range-row{display:flex; align-items:center; gap:12px; padding:8px 0;}
     input[type="range"]{-webkit-appearance:none; width:100%; height:26px; background:transparent;}
     input[type="range"]::-webkit-slider-runnable-track{height:6px; background:linear-gradient(90deg,var(--accent-2),var(--accent)); border-radius:999px;}
-    input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none; width:26px; height:26px; border-radius:50%; background:#fff; border:2px solid var(--accent); margin-top:-10px; box-shadow:0 1px 6px rgba(0,0,0,.08);}
+    input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none; width:26px; height:26px; border-radius:50%;
+      background:#fff; border:2px solid var(--accent); margin-top:-10px; box-shadow:0 1px 6px rgba(0,0,0,.08);}
 
     .yen-input,.pctbox{display:flex; align-items:center; gap:8px; background:#f8fcfd; border:1px solid #d9eaed; border-radius:12px; padding:8px 10px;}
     .yen-input .prefix{font-weight:700; color:var(--accent); border-right:1px solid #e6f1f3; padding-right:10px;}
@@ -84,13 +67,9 @@
     .result .label{font-size:16px; font-weight:800; color:#324245;}
     .amount{font-size:clamp(24px,7.5vw,36px); font-weight:900; color:var(--accent); margin:8px 0 6px; font-feature-settings:"tnum"; font-variant-numeric:tabular-nums;}
 
-    .statement{
-      margin-top:12px; background:#e9f6f8; border:1px dashed var(--accent-2); border-radius:12px; padding:12px;
-      color:#0f2022; font-weight:900; line-height:1.6; font-size:clamp(16px, 4.8vw, 22px);
-      white-space:normal; overflow:visible; word-break:keep-all;
-    }
-    .statement .stmt-top{display:block;}
-    .statement .stmt-bottom{display:block; margin-top:4px;}
+    .statement{margin-top:12px; background:#e9f6f8; border:1px dashed var(--accent-2); border-radius:12px; padding:12px;
+      color:#0f2022; font-weight:900; line-height:1.6; font-size:clamp(16px, 4.8vw, 22px); white-space:normal; overflow:visible; word-break:keep-all;}
+    .statement .stmt-top{display:block;} .statement .stmt-bottom{display:block; margin-top:4px;}
 
     .avgrow{margin-top:10px; display:flex; align-items:center; justify-content:space-between; gap:10px;}
     .avg-label{font-size:15px; font-weight:700; color:#324245;}
@@ -110,7 +89,10 @@
   <div class="wrap">
     <header>
       <div class="brand">
-        <img src="ロゴ.jpg" alt="松本会計事務所ロゴ" class="logo" />
+        <!-- ロゴをリンク化 -->
+        <a class="logo-link" href="https://www.matsumoto-kaikei.or.jp/" target="_blank" rel="noopener" aria-label="税理士法人松本会計事務所 公式サイト">
+          <img src="ロゴ.jpg" alt="松本会計事務所ロゴ" class="logo" />
+        </a>
         <h1 class="title">それ、売上に直すといくらですか？</h1>
       </div>
       <div class="subtitle">支出や投資の金額を「御社の売上相当額」に換算して意思決定の質を高めましょう。</div>
@@ -189,7 +171,7 @@
     <footer>
       Copyright (c) <span id="yyyy"></span>
       <a href="https://www.matsumoto-kaikei.or.jp/" target="_blank" rel="noopener">税理士法人松本会計事務所</a>
-      All Rights Reserved. / r22
+      All Rights Reserved. / r23
     </footer>
   </div>
 
@@ -242,62 +224,41 @@
       btn.addEventListener('click', ()=>{ const v=+btn.dataset.pct; cmrRange.value=v.toFixed(1); cmrInput.value=v.toFixed(1); saveCmr(v); cmrInput.blur(); });
     });
 
-    // ========= 平均単価：リアルタイム3桁カンマ（カーソル維持 & 正規化） =========
+    // ========== 平均単価：リアルタイム3桁カンマ ========== //
     let composing = false;
     avgPriceEl.addEventListener('compositionstart', ()=>composing=true);
     avgPriceEl.addEventListener('compositionend', ()=>composing=false);
 
     function toHalfWidthDigits(str){
       if(!str) return '';
-      // 全角 → 半角
       str = str.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
-      // ①〜⑨, ⓪ → 半角
       const map = {'⓪':'0','①':'1','②':'2','③':'3','④':'4','⑤':'5','⑥':'6','⑦':'7','⑧':'8','⑨':'9'};
       return str.replace(/[⓪①②③④⑤⑥⑦⑧⑨]/g, s => map[s] || s);
     }
     function digitsOnly(str){ return (str||'').replace(/[^\d]/g,''); }
-    function groupThousands(digits){
-      if(!digits) return '';
-      // 先頭の不要な0は除去（ただし "0" は残す）
-      digits = digits.replace(/^0+(?=\d)/, '');
-      return digits.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    function groupThousands(d){
+      if(!d) return '';
+      d = d.replace(/^0+(?=\d)/, '');
+      return d.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     }
     function countDigits(str){ return (str.match(/\d/g)||[]).length; }
     function caretFromDigits(formatted, n){
-      if(n<=0) return 0;
-      let seen=0;
-      for(let i=0;i<formatted.length;i++){
-        const ch = formatted[i];
-        if(ch>='0' && ch<='9'){ seen++; }
-        if(seen===n){ return i+1; }
-      }
+      if(n<=0) return 0; let seen=0;
+      for(let i=0;i<formatted.length;i++){ const ch=formatted[i];
+        if(ch>='0'&&ch<='9'){ seen++; } if(seen===n){ return i+1; } }
       return formatted.length;
     }
-
     function formatAvgInputRealtime(e){
-      if(composing) return; // IME変換中は触らない
-      const el = e.target;
-      const oldVal = String(el.value);
-      const caret = el.selectionStart ?? oldVal.length;
-
-      // カーソル左側の「数字の数」を数える（正規化後にカウント）
-      const left = oldVal.slice(0, caret);
+      if(composing) return;
+      const el=e.target, oldVal=String(el.value), caret=el.selectionStart ?? oldVal.length;
+      const left=oldVal.slice(0, caret);
       const digitsBefore = countDigits(digitsOnly(toHalfWidthDigits(left)));
-
-      // 全体を正規化 → 数字だけ取り出し → カンマ付け
       const raw = digitsOnly(toHalfWidthDigits(oldVal));
       const formatted = groupThousands(raw);
-
-      // 変化なしなら何もしない
-      if(formatted === oldVal) { updateUnits(); return; }
-
+      if(formatted===oldVal){ updateUnits(); return; }
       el.value = formatted;
-
-      // 新しい文字列で、digitsBefore 個の数字の直後にキャレットを戻す
       const newPos = caretFromDigits(formatted, digitsBefore);
-      // iOS対策：描画後にカーソル移動
       requestAnimationFrame(()=>{ try{ el.setSelectionRange(newPos, newPos); }catch{} });
-
       updateUnits();
     }
     avgPriceEl.addEventListener('input', formatAvgInputRealtime);
@@ -305,14 +266,10 @@
     function updateUnits(){
       if(!lastSalesNeeded){ unitsNeededEl.textContent='—'; return; }
       const avg = parseMoney(avgPriceEl.value);
-      if(!isNaN(avg) && avg>0){
-        unitsNeededEl.textContent = (lastSalesNeeded / avg).toFixed(1);
-      }else{
-        unitsNeededEl.textContent = '—';
-      }
+      unitsNeededEl.textContent = (!isNaN(avg) && avg>0) ? (lastSalesNeeded/avg).toFixed(1) : '—';
     }
 
-    // ========= 計算フロー =========
+    // 計算
     function calc(){
       commitCmrInput();
       const spend = parseMoney(spendEl.value);
