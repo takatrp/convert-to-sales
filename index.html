@@ -16,16 +16,26 @@
       --accent:#578899; --accent-2:#7aa2b0; --shadow:0 10px 30px rgba(35,80,90,.12); --radius:16px;
     }
     html,body{height:100%;}
-    body{margin:0; font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic UI","YuGothic","Noto Sans JP","Segoe UI",Roboto,Arial,sans-serif;
-      background:var(--bg); color:var(--ink); -webkit-font-smoothing:antialiased;}
-    .wrap{padding:max(12px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) calc(16px + env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
-      max-width:560px; margin:0 auto;}
+    body{
+      margin:0; font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic UI","YuGothic","Noto Sans JP","Segoe UI",Roboto,Arial,sans-serif;
+      background:var(--bg); color:var(--ink); -webkit-font-smoothing:antialiased;
+    }
+    .wrap{
+      padding:max(12px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right))
+              calc(16px + env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
+      max-width:560px; margin:0 auto;
+    }
 
+    /* ヘッダー（ロゴ左、タイトル右） */
     header{padding:8px 6px 2px;}
     .brand{display:flex; align-items:center; gap:10px;}
     .logo-link{display:inline-flex; line-height:0; text-decoration:none;}
     .logo{height:48px; width:auto; object-fit:contain; flex:0 0 auto;}
-    .title{flex:1; min-width:0; font-weight:800; letter-spacing:.02em; line-height:1.2; margin:0; white-space:nowrap; font-size:clamp(16px, 4.6vw, 24px);}
+    .title{
+      flex:1; min-width:0;
+      font-weight:800; letter-spacing:.02em; line-height:1.2; margin:0;
+      white-space:nowrap; font-size:clamp(16px, 4.6vw, 24px);
+    }
     @media (max-width:360px){ .title{font-size:clamp(15px, 4.2vw, 20px);} }
     .subtitle{color:var(--muted); font-size:12px; margin:6px 0 0 0;}
 
@@ -39,8 +49,7 @@
     .range-row{display:flex; align-items:center; gap:12px; padding:8px 0;}
     input[type="range"]{-webkit-appearance:none; width:100%; height:26px; background:transparent;}
     input[type="range"]::-webkit-slider-runnable-track{height:6px; background:linear-gradient(90deg,var(--accent-2),var(--accent)); border-radius:999px;}
-    input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none; width:26px; height:26px; border-radius:50%;
-      background:#fff; border:2px solid var(--accent); margin-top:-10px; box-shadow:0 1px 6px rgba(0,0,0,.08);}
+    input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none; width:26px; height:26px; border-radius:50%; background:#fff; border:2px solid var(--accent); margin-top:-10px; box-shadow:0 1px 6px rgba(0,0,0,.08);}
 
     .yen-input,.pctbox{display:flex; align-items:center; gap:8px; background:#f8fcfd; border:1px solid #d9eaed; border-radius:12px; padding:8px 10px;}
     .yen-input .prefix{font-weight:700; color:var(--accent); border-right:1px solid #e6f1f3; padding-right:10px;}
@@ -81,15 +90,19 @@
     .metrics .only b{font-weight:900;}
 
     .note{margin-top:10px; color:#6a7a7d; font-size:12px;}
-    footer{margin:18px 4px 6px; text-align:center; color:#667; font-size:11px;}
-    footer a{color:inherit; text-decoration:underline; text-underline-offset:2px;}
+
+    /* フッター（ミニ1行 & 下線リンク） */
+    .mk-mini{
+      margin:18px 4px 6px; text-align:center; color:#667; font-size:11px; line-height:1.6;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+    .mk-mini a{color:inherit; text-decoration:underline; text-underline-offset:2px;}
   </style>
 </head>
 <body>
   <div class="wrap">
     <header>
       <div class="brand">
-        <!-- ロゴをリンク化 -->
         <a class="logo-link" href="https://www.matsumoto-kaikei.or.jp/" target="_blank" rel="noopener" aria-label="税理士法人松本会計事務所 公式サイト">
           <img src="ロゴ.jpg" alt="松本会計事務所ロゴ" class="logo" />
         </a>
@@ -168,10 +181,13 @@
       </div>
     </section>
 
-    <footer>
-      Copyright (c) <span id="yyyy"></span>
-      <a href="https://www.matsumoto-kaikei.or.jp/" target="_blank" rel="noopener">税理士法人松本会計事務所</a>
-      All Rights Reserved. / r23
+    <!-- フッター（ツールポータル仕様） -->
+    <footer class="mk-mini">
+      © <span id="cpy-year">2025</span>
+      <a href="https://www.matsumoto-kaikei.or.jp/" target="_blank" rel="noopener license">税理士法人松本会計事務所</a> ｜ 
+      <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="license noopener">CC BY-NC-SA 4.0</a> ｜ 
+      <a href="/tool-portal/terms.html" target="_blank" rel="noopener">利用条件</a> ｜ 
+      <span id="build-rev">r24</span>（<span id="last-updated-date"></span>）
     </footer>
   </div>
 
@@ -189,7 +205,16 @@
     const DEFAULT_CMR = 54.7;
     let lastSalesNeeded = 0;
 
-    $('#yyyy').textContent = String(new Date().getFullYear());
+    // 年・最終更新日の自動設定
+    (function setFooterDates(){
+      const y = new Date().getFullYear();
+      const lm = new Date(document.lastModified);
+      const ym = lm.getFullYear(), mm = String(lm.getMonth()+1).padStart(2,'0'), dm = String(lm.getDate()).padStart(2,'0');
+      const elY = document.getElementById('cpy-year');
+      const elLM = document.getElementById('last-updated-date');
+      if(elY) elY.textContent = y;
+      if(elLM) elLM.textContent = `${ym}-${mm}-${dm}`;
+    })();
 
     function parseMoney(t){ if(t===null||t===undefined) return NaN; return Number(String(t).replace(/[^\d.-]/g,'')); }
     function formatJPY(n){ return n.toLocaleString('ja-JP',{style:'currency',currency:'JPY',maximumFractionDigits:0}); }
@@ -224,7 +249,7 @@
       btn.addEventListener('click', ()=>{ const v=+btn.dataset.pct; cmrRange.value=v.toFixed(1); cmrInput.value=v.toFixed(1); saveCmr(v); cmrInput.blur(); });
     });
 
-    // ========== 平均単価：リアルタイム3桁カンマ ========== //
+    // 平均単価：リアルタイム3桁カンマ
     let composing = false;
     avgPriceEl.addEventListener('compositionstart', ()=>composing=true);
     avgPriceEl.addEventListener('compositionend', ()=>composing=false);
@@ -236,16 +261,11 @@
       return str.replace(/[⓪①②③④⑤⑥⑦⑧⑨]/g, s => map[s] || s);
     }
     function digitsOnly(str){ return (str||'').replace(/[^\d]/g,''); }
-    function groupThousands(d){
-      if(!d) return '';
-      d = d.replace(/^0+(?=\d)/, '');
-      return d.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-    }
+    function groupThousands(d){ if(!d) return ''; d = d.replace(/^0+(?=\d)/, ''); return d.replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
     function countDigits(str){ return (str.match(/\d/g)||[]).length; }
     function caretFromDigits(formatted, n){
       if(n<=0) return 0; let seen=0;
-      for(let i=0;i<formatted.length;i++){ const ch=formatted[i];
-        if(ch>='0'&&ch<='9'){ seen++; } if(seen===n){ return i+1; } }
+      for(let i=0;i<formatted.length;i++){ const ch=formatted[i]; if(ch>='0'&&ch<='9'){ seen++; } if(seen===n){ return i+1; } }
       return formatted.length;
     }
     function formatAvgInputRealtime(e){
@@ -291,12 +311,12 @@
       updateUnits();
       resultArea.scrollIntoView({behavior:'smooth', block:'center'});
     }
-    $('#calc').addEventListener('click', calc);
+    document.getElementById('calc').addEventListener('click', calc);
     cmrInput.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); calc(); }});
     spendEl.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); calc(); }});
 
     // コピー
-    $('#copy').addEventListener('click', async ()=>{
+    document.getElementById('copy').addEventListener('click', async ()=>{
       if(resultArea.hidden) return;
       const avgTxt = avgPriceEl.value ? `平均単価: ¥${avgPriceEl.value}` : '平均単価: 未入力';
       const text = `御社の売上相当額: ${salesEl.textContent}\n${statementEl.textContent.replace(/\s+/g,' ')}\n＝ 必要販売数： ${unitsNeededEl.textContent}\n${avgTxt}`;
@@ -307,7 +327,7 @@
     });
 
     // リセット
-    $('#reset').addEventListener('click', ()=>{
+    document.getElementById('reset').addEventListener('click', ()=>{
       spendRange.value = 100000; spendRange.dispatchEvent(new Event('input'));
       const cmr0 = loadCmr(); cmrRange.value = cmr0.toFixed(1); cmrInput.value = cmr0.toFixed(1);
       lastSalesNeeded = 0; avgPriceEl.value = '';
@@ -318,7 +338,7 @@
     });
 
     // 印刷
-    $('#print').addEventListener('click', ()=>{ if(resultArea.hidden){ return; } window.print(); });
+    document.getElementById('print').addEventListener('click', ()=>{ if(resultArea.hidden){ return; } window.print(); });
   </script>
 </body>
 </html>
