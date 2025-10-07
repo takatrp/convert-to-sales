@@ -74,7 +74,7 @@
 
     .result{text-align:center; margin-top:16px;}
     .result .label{font-size:16px; font-weight:800; color:#324245;}
-    .amount{font-size:clamp(24px,7.5vw,36px); font-weight:900; color:var(--accent); margin:8px 0 6px; font-feature-settings:"tnum"; font-variant-numeric:tabular-nums;}
+    .amount{font-size:clamp(24px,7.5vw,36px); font-weight:900; color:#578899; margin:8px 0 6px; font-feature-settings:"tnum"; font-variant-numeric:tabular-nums;}
 
     .statement{
       margin-top:12px; background:#e9f6f8; border:1px dashed var(--accent-2); border-radius:12px; padding:12px;
@@ -102,8 +102,8 @@
       color:#667;
       font-size:11px;
       line-height:1.6;
-      white-space:normal;   /* 折返し許可 */
-      overflow:visible;     /* 省略しない */
+      white-space:normal;
+      overflow:visible;
       text-overflow:clip;
     }
     .mk-mini a{color:inherit; text-decoration:underline; text-underline-offset:2px;}
@@ -140,23 +140,25 @@
         <div class="label big">② 御社の限界利益率（％）</div>
         <div class="helper">※変動損益計算書もしくは月次決算速報サービスにてご確認ください</div>
         <div class="range-row">
-          <input id="cmr" type="range" min="5" max="95" step="0.1" value="54.7" />
+          <!-- 初期値を 43.6% に変更 -->
+          <input id="cmr" type="range" min="5" max="95" step="0.1" value="43.6" />
           <div class="pctbox">
-            <input id="cmrInput" class="pct" type="text" inputmode="decimal" value="54.7" />
+            <input id="cmrInput" class="pct" type="text" inputmode="decimal" value="43.6" />
             <span class="unit">%</span>
           </div>
         </div>
 
         <div class="ref-title">参考：産業ごとの全国平均</div>
         <div class="chip-grid">
-          <button class="chip" type="button" data-pct="54.7"><span class="nm">全産業</span><span class="val">54.7%</span></button>
-          <button class="chip" type="button" data-pct="65.7"><span class="nm">漁業</span><span class="val">65.7%</span></button>
-          <button class="chip" type="button" data-pct="48.0"><span class="nm">建設業</span><span class="val">48.0%</span></button>
-          <button class="chip" type="button" data-pct="58.0"><span class="nm">製造業</span><span class="val">58.0%</span></button>
-          <button class="chip" type="button" data-pct="29.7"><span class="nm">卸売業</span><span class="val">29.7%</span></button>
-          <button class="chip" type="button" data-pct="35.7"><span class="nm">小売業</span><span class="val">35.7%</span></button>
-          <button class="chip" type="button" data-pct="82.4"><span class="nm">宿泊業</span><span class="val">82.4%</span></button>
-          <button class="chip" type="button" data-pct="64.2"><span class="nm">飲食業</span><span class="val">64.2%</span></button>
+          <!-- ▼ 指定の新しい業種別数値 -->
+          <button class="chip" type="button" data-pct="43.6"><span class="nm">全産業</span><span class="val">43.6%</span></button>
+          <button class="chip" type="button" data-pct="64.6"><span class="nm">漁業</span><span class="val">64.6%</span></button>
+          <button class="chip" type="button" data-pct="39.9"><span class="nm">建設業</span><span class="val">39.9%</span></button>
+          <button class="chip" type="button" data-pct="44.8"><span class="nm">製造業</span><span class="val">44.8%</span></button>
+          <button class="chip" type="button" data-pct="20.5"><span class="nm">卸売業</span><span class="val">20.5%</span></button>
+          <button class="chip" type="button" data-pct="32.0"><span class="nm">小売業</span><span class="val">32.0%</span></button>
+          <button class="chip" type="button" data-pct="79.2"><span class="nm">宿泊業</span><span class="val">79.2%</span></button>
+          <button class="chip" type="button" data-pct="64.1"><span class="nm">飲食業</span><span class="val">64.1%</span></button>
         </div>
       </div>
 
@@ -204,7 +206,7 @@
       <a href="https://www.matsumoto-kaikei.or.jp/" target="_blank" rel="noopener license">税理士法人松本会計事務所</a> ｜ 
       <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="license noopener">CC BY-NC-SA 4.0</a> ｜ 
       <a href="/tool-portal/terms.html" target="_blank" rel="noopener">利用条件</a> ｜ 
-      <span id="build-rev">r25</span>（<span id="last-updated-date"></span>）
+      <span id="build-rev">r26</span>（<span id="last-updated-date"></span>）
     </footer>
   </div>
 
@@ -219,7 +221,7 @@
     const avgRow = $('#avgRow'), avgPriceEl = $('#avgPrice'), metrics = $('#metrics'), unitsNeededEl = $('#unitsNeeded');
 
     const STORAGE_KEY_CMR = 'cmrPct_v1';
-    const DEFAULT_CMR = 54.7;
+    const DEFAULT_CMR = 43.6; // ← 初期値を43.6%へ
     let lastSalesNeeded = 0;
 
     // 年・最終更新日の自動設定
@@ -227,8 +229,8 @@
       const y = new Date().getFullYear();
       const lm = new Date(document.lastModified);
       const ym = lm.getFullYear(), mm = String(lm.getMonth()+1).padStart(2,'0'), dm = String(lm.getDate()).padStart(2,'0');
-      $('#cpy-year').textContent = y;
-      $('#last-updated-date').textContent = `${ym}-${mm}-${dm}`;
+      document.getElementById('cpy-year').textContent = y;
+      document.getElementById('last-updated-date').textContent = `${ym}-${mm}-${dm}`;
     })();
 
     function parseMoney(t){ if(t===null||t===undefined) return NaN; return Number(String(t).replace(/[^\d.-]/g,'')); }
@@ -237,8 +239,14 @@
     function parsePct(t){ if(t==null) return NaN; const s=String(t).replace('%','').replace(',', '.').trim(); return Number(s); }
     function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
 
-    // CMR 保存/復元
-    function loadCmr(){ try{ const v=parsePct(localStorage.getItem(STORAGE_KEY_CMR)); if(!isNaN(v)) return clamp(v, +cmrRange.min, +cmrRange.max);}catch{} return DEFAULT_CMR; }
+    // CMR 保存/復元（保存値があれば優先）
+    function loadCmr(){
+      try{
+        const v=parsePct(localStorage.getItem(STORAGE_KEY_CMR));
+        if(!isNaN(v)) return clamp(v, +cmrRange.min, +cmrRange.max);
+      }catch{}
+      return DEFAULT_CMR;
+    }
     function saveCmr(v){ try{ localStorage.setItem(STORAGE_KEY_CMR, Number(v).toFixed(1)); }catch{} }
 
     // 支出額 双方向
@@ -246,7 +254,7 @@
     spendEl.addEventListener('input', (e)=>{ const raw=parseMoney(e.target.value); if(isNaN(raw)) return; e.target.value=formatPlainJPY(raw); spendRange.value = clamp(raw, +spendRange.min, +spendRange.max); });
     spendRange.dispatchEvent(new Event('input'));
 
-    // CMR 初期値
+    // CMR 初期値（保存値があれば反映）
     const initCmr = loadCmr();
     cmrRange.value = initCmr.toFixed(1);
     cmrInput.value = initCmr.toFixed(1);
@@ -264,29 +272,27 @@
       btn.addEventListener('click', ()=>{ const v=+btn.dataset.pct; cmrRange.value=v.toFixed(1); cmrInput.value=v.toFixed(1); saveCmr(v); cmrInput.blur(); });
     });
 
-    /* ===== 平均単価：リアルタイム3桁カンマ（IME/全角/◯囲み数字対応） ===== */
+    /* ===== 平均単価：リアルタイム3桁カンマ ===== */
     let composing = false;
     avgPriceEl.addEventListener('compositionstart', ()=>composing=true);
     avgPriceEl.addEventListener('compositionend', ()=>composing=false);
 
     function toHalfWidthDigits(str){
       if(!str) return '';
-      // 全角 → 半角
       str = str.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
-      // ①〜⑨, ⓪ → 半角
       const map = {'⓪':'0','①':'1','②':'2','③':'3','④':'4','⑤':'5','⑥':'6','⑦':'7','⑧':'8','⑨':'9'};
       return str.replace(/[⓪①②③④⑤⑥⑦⑧⑨]/g, s => map[s] || s);
     }
-    function digitsOnly(str){ return (str||'').replace(/[^\d]/g,''); }
-    function groupThousands(d){ if(!d) return ''; d = d.replace(/^0+(?=\d)/, ''); return d.replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
-    function countDigits(str){ return (str.match(/\d/g)||[]).length; }
+    const digitsOnly = s => (s||'').replace(/[^\d]/g,'');
+    const groupThousands = d => !d ? '' : d.replace(/^0+(?=\d)/,'').replace(/\B(?=(\d{3})+(?!\d))/g,',');
+    const countDigits = s => (s.match(/\d/g)||[]).length;
     function caretFromDigits(formatted, n){
       if(n<=0) return 0; let seen=0;
       for(let i=0;i<formatted.length;i++){ const ch=formatted[i]; if(ch>='0'&&ch<='9'){ seen++; } if(seen===n){ return i+1; } }
       return formatted.length;
     }
     function formatAvgInputRealtime(e){
-      if(composing) return; // IME変換中は触らない
+      if(composing) return;
       const el=e.target, oldVal=String(el.value), caret=el.selectionStart ?? oldVal.length;
       const left=oldVal.slice(0, caret);
       const digitsBefore = countDigits(digitsOnly(toHalfWidthDigits(left)));
