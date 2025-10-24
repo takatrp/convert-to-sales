@@ -15,6 +15,7 @@
       --bg:#f4f9fb; --card:#ffffff; --ink:#1e2a2d; --muted:#5a6a6d;
       --accent:#578899; --accent-2:#7aa2b0; --shadow:0 10px 30px rgba(35,80,90,.12); --radius:16px;
       --overlay: rgba(9,30,40,.55);
+      --tour-card-h:220px;  /* JSで実寸に更新 */
     }
     html,body{height:100%;}
     body{
@@ -28,16 +29,12 @@
       max-width:560px; margin:0 auto;
     }
 
-    /* ヘッダー（ロゴ左、タイトル右） */
     header{padding:8px 6px 2px;}
     .brand{display:flex; align-items:center; gap:10px;}
     .logo-link{display:inline-flex; line-height:0; text-decoration:none;}
     .logo{height:48px; width:auto; object-fit:contain; flex:0 0 auto;}
-    .title{
-      flex:1; min-width:0;
-      font-weight:800; letter-spacing:.02em; line-height:1.2; margin:0;
-      white-space:nowrap; font-size:clamp(16px, 4.6vw, 24px);
-    }
+    .title{flex:1; min-width:0; font-weight:800; letter-spacing:.02em; line-height:1.2; margin:0;
+      white-space:nowrap; font-size:clamp(16px, 4.6vw, 24px);}
     @media (max-width:360px){ .title{font-size:clamp(15px, 4.2vw, 20px);} }
     .subtitle{color:var(--muted); font-size:12px; margin:6px 0 0 0;}
 
@@ -47,7 +44,7 @@
     .label.big{font-size:16px; font-weight:700; color:#324245;}
     .label-row{display:flex; align-items:center; justify-content:space-between; gap:10px; margin:0 0 6px 2px;}
     .helper{font-size:12px; color:#6a7a7d; margin:4px 2px 0;}
-    .ref-title{margin:10px 2px 0; font-size:12px; color:#607c80;}
+    .ref-title{margin-top:10px; font-size:12px; color:#607c80;}
 
     .range-row{display:flex; align-items:center; gap:12px; padding:8px 0;}
     input[type="range"]{-webkit-appearance:none; width:100%; height:26px; background:transparent;}
@@ -72,10 +69,8 @@
     .btn:active{transform:translateY(1px);}
     .btn.secondary{background:#eef7f8; color:var(--accent); box-shadow:none; border:1px solid #d9eaed;}
 
-    .tiny-btn{
-      background:#eef7f8; color:var(--accent); border:1px solid #d9eaed; border-radius:999px;
-      font-size:12px; padding:6px 10px; font-weight:700; line-height:1; box-shadow:none; cursor:pointer;
-    }
+    .tiny-btn{background:#eef7f8; color:var(--accent); border:1px solid #d9eaed; border-radius:999px; font-size:12px;
+      padding:6px 10px; font-weight:700; line-height:1; cursor:pointer;}
 
     .btn-row{display:none; gap:8px; margin-top:12px;} .btn-row.show{display:flex;} .btn-row .btn{flex:1; padding:12px 10px; font-size:15px;}
 
@@ -83,13 +78,9 @@
     .result .label{font-size:16px; font-weight:800; color:#324245;}
     .amount{font-size:clamp(24px,7.5vw,36px); font-weight:900; color:#578899; margin:8px 0 6px; font-feature-settings:"tnum"; font-variant-numeric:tabular-nums;}
 
-    .statement{
-      margin-top:12px; background:#e9f6f8; border:1px dashed var(--accent-2); border-radius:12px; padding:12px;
-      color:#0f2022; font-weight:900; line-height:1.6; font-size:clamp(16px, 4.8vw, 22px);
-      white-space:normal; overflow:visible; word-break:keep-all;
-    }
-    .statement .stmt-top{display:block;}
-    .statement .stmt-bottom{display:block; margin-top:4px;}
+    .statement{margin-top:12px; background:#e9f6f8; border:1px dashed #7aa2b0; border-radius:12px; padding:12px; color:#0f2022; font-weight:900;
+      line-height:1.6; font-size:clamp(16px, 4.8vw, 22px); white-space:normal; overflow:visible; word-break:keep-all;}
+    .statement .stmt-top{display:block;} .statement .stmt-bottom{display:block; margin-top:4px;}
 
     .avgrow{margin-top:10px; display:flex; align-items:center; justify-content:space-between; gap:10px;}
     .avg-label{font-size:15px; font-weight:700; color:#324245;}
@@ -103,35 +94,14 @@
     .note{margin-top:10px; color:#6a7a7d; font-size:12px;}
 
     /* ▼ フッター（ツールポータル準拠：折返し可） */
-    .mk-mini{
-      margin:18px 4px 6px;
-      text-align:center;
-      color:#667;
-      font-size:11px;
-      line-height:1.6;
-      white-space:normal;
-      overflow:visible;
-      text-overflow:clip;
-    }
+    .mk-mini{margin:18px 4px 6px; text-align:center; color:#667; font-size:11px; line-height:1.6; white-space:normal; overflow:visible; text-overflow:clip;}
     .mk-mini a{color:inherit; text-decoration:underline; text-underline-offset:2px;}
 
-    /* ▼ チュートリアル */
-    .tour-overlay{
-      position:fixed; inset:0; background:var(--overlay); backdrop-filter:saturate(120%) blur(1px);
-      display:none; z-index:9999;
-    }
+    /* ▼ チュートリアル（オーバーレイ/カード/ハイライト） */
+    .tour-overlay{position:fixed; inset:0; background:var(--overlay); backdrop-filter:saturate(120%) blur(1px); display:none; z-index:9999;}
     .tour-overlay.show{display:block;}
-    .tour-highlight{
-      position:relative; z-index:10000 !important;
-      box-shadow:0 0 0 4px rgba(87,136,153,.35), 0 0 0 9999px rgba(0,0,0,0); /* focus ringだけ */
-      border-radius:12px;
-      transition:box-shadow .2s ease;
-    }
-    .tour-card{
-      position:fixed; left:12px; right:12px; bottom:12px;
-      background:#fff; color:#123; border-radius:14px; box-shadow:0 14px 40px rgba(0,0,0,.18);
-      padding:14px 14px 12px; max-width:560px; margin:0 auto;
-    }
+    .tour-card{position:fixed; left:12px; right:12px; bottom:12px; background:#fff; color:#123; border-radius:14px;
+      box-shadow:0 14px 40px rgba(0,0,0,.18); padding:14px 14px 12px; max-width:560px; margin:0 auto;}
     .tour-ttl{font-weight:800; margin:0 0 4px; font-size:16px;}
     .tour-txt{font-size:13px; color:#415257; line-height:1.5; margin:0 0 8px;}
     .tour-actions{display:flex; align-items:center; justify-content:space-between; gap:8px;}
@@ -140,15 +110,17 @@
     .tour-btn.primary{background:linear-gradient(180deg,var(--accent-2),var(--accent)); color:#fff;}
     .tour-btn.ghost{background:#eef7f8; color:var(--accent); border:1px solid #d9eaed;}
     .tour-steps{display:flex; gap:6px;}
-    .dot{width:6px; height:6px; border-radius:50%; background:#c9d9de;}
-    .dot.on{background:var(--accent);}
+    .dot{width:6px; height:6px; border-radius:50%; background:#c9d9de;} .dot.on{background:var(--accent);}
+    .tour-highlight{position:relative; z-index:10000 !important; box-shadow:0 0 0 4px rgba(87,136,153,.35), 0 0 0 9999px rgba(0,0,0,0); border-radius:12px; transition:box-shadow .2s ease;}
+
+    /* ▼ フォーカス補助（カードに隠れないよう余白） */
+    [data-focus]{scroll-margin-top:12px; scroll-margin-bottom:calc(var(--tour-card-h) + 24px);}
   </style>
 </head>
 <body>
   <div class="wrap">
     <header>
       <div class="brand">
-        <!-- ロゴは公式サイトへリンク -->
         <a class="logo-link" href="https://www.matsumoto-kaikei.or.jp/" target="_blank" rel="noopener" aria-label="税理士法人松本会計事務所 公式サイト">
           <img src="ロゴ.jpg" alt="松本会計事務所ロゴ" class="logo" />
         </a>
@@ -159,10 +131,9 @@
 
     <section class="card" aria-label="入力">
       <!-- ① 支出額 -->
-      <div class="field" id="field-spend">
+      <div class="field" id="field-spend" data-focus>
         <div class="label-row">
           <div class="label big">① 支出額（円）</div>
-          <!-- ▶ チュートリアルボタン（右端） -->
           <button id="tutorialBtn" class="tiny-btn" type="button" aria-haspopup="dialog">チュートリアル</button>
         </div>
         <div class="range-row">
@@ -175,7 +146,7 @@
       </div>
 
       <!-- ② 限界利益率 -->
-      <div class="field" id="field-cmr">
+      <div class="field" id="field-cmr" data-focus>
         <div class="label big">② 御社の限界利益率（％）</div>
         <div class="helper">※変動損益計算書もしくは月次決算速報サービスにてご確認ください</div>
         <div class="range-row">
@@ -187,7 +158,7 @@
         </div>
 
         <div class="ref-title">参考：産業ごとの全国平均</div>
-        <div class="chip-grid" id="chips">
+        <div class="chip-grid" id="chips" data-focus>
           <button class="chip" type="button" data-pct="43.6"><span class="nm">全産業</span><span class="val">43.6%</span></button>
           <button class="chip" type="button" data-pct="64.6"><span class="nm">漁業</span><span class="val">64.6%</span></button>
           <button class="chip" type="button" data-pct="39.9"><span class="nm">建設業</span><span class="val">39.9%</span></button>
@@ -200,17 +171,17 @@
       </div>
 
       <div class="field">
-        <button id="calc" class="btn" type="button">御社の売上相当額を計算</button>
+        <button id="calc" class="btn" type="button" data-focus>御社の売上相当額を計算</button>
       </div>
 
       <!-- 結果表示 -->
-      <div class="result" id="resultArea" hidden>
+      <div class="result" id="resultArea" hidden data-focus>
         <div class="label big">御社の売上相当額</div>
         <div class="amount" id="sales"></div>
         <div class="statement" id="statement"></div>
 
-        <!-- 平均単価（任意）行 -->
-        <div class="avgrow" id="avgRow" hidden>
+        <!-- 平均単価（任意） -->
+        <div class="avgrow" id="avgRow" hidden data-focus>
           <div class="avg-label">平均単価（任意）</div>
           <div class="yen-input small">
             <span class="prefix">¥</span>
@@ -218,7 +189,7 @@
           </div>
         </div>
 
-        <!-- 必要販売数（右寄せ｜平均単価の直下） -->
+        <!-- 必要販売数 -->
         <div class="metrics" id="metrics" hidden>
           <div class="only">＝ 必要販売数： <b id="unitsNeeded">—</b></div>
         </div>
@@ -230,7 +201,7 @@
       </div>
 
       <!-- コピー / リセット / 印刷（計算後に表示） -->
-      <div class="btn-row" id="actionRow">
+      <div class="btn-row" id="actionRow" data-focus>
         <button id="copy" class="btn secondary" type="button">コピー</button>
         <button id="reset" class="btn secondary" type="button">リセット</button>
         <button id="print" class="btn secondary" type="button">印刷</button>
@@ -243,11 +214,11 @@
       <a href="https://www.matsumoto-kaikei.or.jp/" target="_blank" rel="noopener license">税理士法人松本会計事務所</a> ｜ 
       <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="license noopener">CC BY-NC-SA 4.0</a> ｜ 
       <a href="/tool-portal/terms.html" target="_blank" rel="noopener">利用条件</a> ｜ 
-      <span id="build-rev">r27</span>（<span id="last-updated-date"></span>）
+      <span id="build-rev">r28</span>（<span id="last-updated-date"></span>）
     </footer>
   </div>
 
-  <!-- ▼ チュートリアルオーバーレイ -->
+  <!-- ▼ チュートリアルダイアログ -->
   <div id="tour" class="tour-overlay" role="dialog" aria-modal="true" aria-labelledby="tourTitle" aria-describedby="tourText">
     <div class="tour-card">
       <h2 id="tourTitle" class="tour-ttl"></h2>
@@ -277,7 +248,7 @@
     const DEFAULT_CMR = 43.6;
     let lastSalesNeeded = 0;
 
-    // 年・最終更新日の自動設定
+    // 年・最終更新日
     (function setFooterDates(){
       const y = new Date().getFullYear();
       const lm = new Date(document.lastModified);
@@ -292,14 +263,8 @@
     function parsePct(t){ if(t==null) return NaN; const s=String(t).replace('%','').replace(',', '.').trim(); return Number(s); }
     function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
 
-    // CMR 保存/復元（保存値があれば優先）
-    function loadCmr(){
-      try{
-        const v=parsePct(localStorage.getItem(STORAGE_KEY_CMR));
-        if(!isNaN(v)) return clamp(v, +cmrRange.min, +cmrRange.max);
-      }catch{}
-      return DEFAULT_CMR;
-    }
+    // 限界利益率 保存/復元
+    function loadCmr(){ try{ const v=parsePct(localStorage.getItem(STORAGE_KEY_CMR)); if(!isNaN(v)) return clamp(v, +cmrRange.min, +cmrRange.max);}catch{} return DEFAULT_CMR; }
     function saveCmr(v){ try{ localStorage.setItem(STORAGE_KEY_CMR, Number(v).toFixed(1)); }catch{} }
 
     // 支出額 双方向
@@ -307,7 +272,7 @@
     spendEl.addEventListener('input', (e)=>{ const raw=parseMoney(e.target.value); if(isNaN(raw)) return; e.target.value=formatPlainJPY(raw); spendRange.value = clamp(raw, +spendRange.min, +spendRange.max); });
     spendRange.dispatchEvent(new Event('input'));
 
-    // CMR 初期値（保存値があれば反映）
+    // 限界利益率 初期値
     const initCmr = loadCmr();
     cmrRange.value = initCmr.toFixed(1);
     cmrInput.value = initCmr.toFixed(1);
@@ -325,25 +290,17 @@
       btn.addEventListener('click', ()=>{ const v=+btn.dataset.pct; cmrRange.value=v.toFixed(1); cmrInput.value=v.toFixed(1); saveCmr(v); cmrInput.blur(); });
     });
 
-    /* ===== 平均単価：リアルタイム3桁カンマ ===== */
+    /* 平均単価：リアルタイム3桁カンマ */
     let composing = false;
     avgPriceEl.addEventListener('compositionstart', ()=>composing=true);
     avgPriceEl.addEventListener('compositionend', ()=>composing=false);
-
-    function toHalfWidthDigits(str){
-      if(!str) return '';
-      str = str.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
-      const map = {'⓪':'0','①':'1','②':'2','③':'3','④':'4','⑤':'5','⑥':'6','⑦':'7','⑧':'8','⑨':'9'};
-      return str.replace(/[⓪①②③④⑤⑥⑦⑧⑨]/g, s => map[s] || s);
-    }
+    function toHalfWidthDigits(str){ if(!str) return ''; str = str.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0)-0xFEE0));
+      const map={'⓪':'0','①':'1','②':'2','③':'3','④':'4','⑤':'5','⑥':'6','⑦':'7','⑧':'8','⑨':'9'}; return str.replace(/[⓪①②③④⑤⑥⑦⑧⑨]/g, s=>map[s]||s); }
     const digitsOnly = s => (s||'').replace(/[^\d]/g,'');
     const groupThousands = d => !d ? '' : d.replace(/^0+(?=\d)/,'').replace(/\B(?=(\d{3})+(?!\d))/g,',');
     const countDigits = s => (s.match(/\d/g)||[]).length;
-    function caretFromDigits(formatted, n){
-      if(n<=0) return 0; let seen=0;
-      for(let i=0;i<formatted.length;i++){ const ch=formatted[i]; if(ch>='0'&&ch<='9'){ seen++; } if(seen===n){ return i+1; } }
-      return formatted.length;
-    }
+    function caretFromDigits(formatted, n){ if(n<=0) return 0; let seen=0; for(let i=0;i<formatted.length;i++){ const ch=formatted[i];
+      if(ch>='0'&&ch<='9'){ seen++; } if(seen===n){ return i+1; } } return formatted.length; }
     function formatAvgInputRealtime(e){
       if(composing) return;
       const el=e.target, oldVal=String(el.value), caret=el.selectionStart ?? oldVal.length;
@@ -365,7 +322,7 @@
       unitsNeededEl.textContent = (!isNaN(avg) && avg>0) ? (lastSalesNeeded/avg).toFixed(1) : '—';
     }
 
-    /* ===== 計算・操作ボタン ===== */
+    /* 計算 */
     function calc(){
       commitCmrInput();
       const spend = parseMoney(spendEl.value);
@@ -380,9 +337,7 @@
         `<span class="stmt-top">${formatJPY(spend)} の支出は、</span>`+
         `<span class="stmt-bottom">御社の売上 ${formatJPY(lastSalesNeeded)} に相当します。</span>`;
 
-      resultArea.hidden = false;
-      avgRow.hidden = false;
-      metrics.hidden = false;
+      resultArea.hidden = false; avgRow.hidden = false; metrics.hidden = false;
       actionRow.classList.add('show');
       updateUnits();
       resultArea.scrollIntoView({behavior:'smooth', block:'center'});
@@ -391,7 +346,7 @@
     cmrInput.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); calc(); }});
     spendEl.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); calc(); }});
 
-    // コピー
+    // コピー/リセット/印刷
     $('#copy').addEventListener('click', async ()=>{
       if(resultArea.hidden) return;
       const avgTxt = avgPriceEl.value ? `平均単価: ¥${avgPriceEl.value}` : '平均単価: 未入力';
@@ -401,64 +356,85 @@
         else{ const ta=document.createElement('textarea'); ta.value=text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); alert('結果をコピーしました。'); }
       }catch{ alert('コピーに失敗しました。'); }
     });
-
-    // リセット
     $('#reset').addEventListener('click', ()=>{
       spendRange.value = 100000; spendRange.dispatchEvent(new Event('input'));
       const cmr0 = loadCmr(); cmrRange.value = cmr0.toFixed(1); cmrInput.value = cmr0.toFixed(1);
       lastSalesNeeded = 0; avgPriceEl.value = '';
-      resultArea.hidden = true; avgRow.hidden = true; metrics.hidden = true;
-      unitsNeededEl.textContent = '—';
-      actionRow.classList.remove('show');
-      window.scrollTo({top:0, behavior:'smooth'});
+      resultArea.hidden = true; avgRow.hidden = true; metrics.hidden = true; unitsNeededEl.textContent='—';
+      actionRow.classList.remove('show'); window.scrollTo({top:0, behavior:'smooth'});
     });
-
-    // 印刷
     $('#print').addEventListener('click', ()=>{ if(resultArea.hidden){ return; } window.print(); });
 
-    /* ========== チュートリアル ========== */
+    /* ========= チュートリアル ========= */
     const tour = $('#tour'), tourTitle = $('#tourTitle'), tourText = $('#tourText');
     const btnNext = $('#tourNext'), btnPrev = $('#tourPrev'), btnClose = $('#tourClose'), tourDots = $('#tourDots');
     const tutorialBtn = $('#tutorialBtn');
 
     const steps = [
       {el:'#field-spend', ttl:'① 支出額（円）', txt:'スライダー or 右側の金額欄に支出額を入力します。スライダーと入力欄は連動します。'},
-      {el:'#field-cmr', ttl:'② 限界利益率（％）', txt:'御社の限界利益率を設定します。スライダーまたは右の数値欄から直接入力できます（0.1%刻み）。'},
-      {el:'#chips', ttl:'産業別の参考値', txt:'分からない場合は業種チップをタップすると、その平均値が反映されます。'},
-      {el:'#calc', ttl:'計算', txt:'「御社の売上相当額を計算」を押すと、必要な売上相当額が表示されます。'},
-      {el:'#resultArea', ttl:'結果', txt:'支出額を売上に換算した結果が表示されます。文章は自動で2行に分かれて読みやすく表示されます。'},
-      {el:'#avgRow', ttl:'平均単価（任意）', txt:'平均単価を入力すると「＝必要販売数」を自動計算します。金額は入力中も3桁カンマで見やすく整形されます。'},
-      {el:'#actionRow', ttl:'コピー／リセット／印刷', txt:'結果をコピー・リセット・印刷できます（計算後に表示）。'}
+      {el:'#field-cmr',   ttl:'② 限界利益率（％）', txt:'御社の限界利益率を設定します。スライダーまたは右の数値欄から直接入力できます（0.1%刻み）。'},
+      {el:'#chips',       ttl:'産業別の参考値', txt:'不明な場合は業種チップをタップすると、その平均値が反映されます。'},
+      {el:'#calc',        ttl:'計算', txt:'「御社の売上相当額を計算」を押すと結果が表示されます。'},
+      {el:'#resultArea',  ttl:'結果', txt:'支出額を売上に換算した結果が表示されます。文章は自動で2行に分かれて読みやすく表示されます。'},
+      {el:'#avgRow',      ttl:'平均単価（任意）', txt:'平均単価を入力すると「＝必要販売数」を自動計算します（入力中も3桁カンマ表示）。'},
+      {el:'#actionRow',   ttl:'コピー／リセット／印刷', txt:'結果をコピー・リセット・印刷できます（計算後に表示）。'}
     ];
     let idx = 0, highlighted = null;
 
+    function setTourCardHeightVar(){
+      const card = document.querySelector('.tour-card');
+      const h = card ? card.offsetHeight : 220;
+      document.documentElement.style.setProperty('--tour-card-h', h + 'px');
+      return h;
+    }
+    function smartFocus(el){
+      if(!el) return;
+      const cardH = setTourCardHeightVar();
+      const topSafe = 12;
+      const bottomSafe = window.innerHeight - cardH - 12;
+      const r = el.getBoundingClientRect();
+      if(r.top < topSafe || r.bottom > bottomSafe){
+        const offset = r.top - ((topSafe + bottomSafe - r.height)/2);
+        const targetY = window.pageYOffset + offset;
+        window.scrollTo({ top: targetY, behavior: 'smooth' });
+      }
+    }
     function makeDots(){
       tourDots.innerHTML = '';
       for(let i=0;i<steps.length;i++){
         const d=document.createElement('div'); d.className='dot'+(i===idx?' on':''); tourDots.appendChild(d);
       }
     }
-    function highlight(el){
+    function highlightTarget(target){
       if(highlighted){ highlighted.classList.remove('tour-highlight'); highlighted = null; }
+      const el = (typeof target === 'string') ? document.querySelector(target) : target;
       if(!el) return;
       el.classList.add('tour-highlight');
       highlighted = el;
-      el.scrollIntoView({behavior:'smooth', block:'center'});
+      smartFocus(el);
     }
     function showStep(i){
       idx = Math.max(0, Math.min(steps.length-1, i));
       const step = steps[idx];
       tourTitle.textContent = step.ttl;
-      tourText.textContent = step.txt;
+      tourText.textContent  = step.txt;
       makeDots();
       btnPrev.disabled = idx===0;
       btnNext.textContent = (idx===steps.length-1) ? '完了' : '次へ';
-      const target = document.querySelector(step.el);
-      highlight(target);
+      requestAnimationFrame(()=>{
+        setTourCardHeightVar();
+        const el = document.querySelector(step.el);
+        highlightTarget(el);
+      });
+      const reFocus = ()=> highlighted && smartFocus(highlighted);
+      window.addEventListener('resize', reFocus, { once:true });
+      window.addEventListener('orientationchange', reFocus, { once:true });
+      setTimeout(()=>{ highlighted && smartFocus(highlighted); }, 250);
     }
     function startTour(){
       tour.classList.add('show');
       document.body.style.overflow='hidden';
+      setTourCardHeightVar();
       showStep(0);
     }
     function endTour(){
@@ -471,8 +447,6 @@
     btnClose.addEventListener('click', endTour);
     btnPrev.addEventListener('click', ()=>showStep(idx-1));
     btnNext.addEventListener('click', ()=>{ if(idx===steps.length-1){ endTour(); } else { showStep(idx+1); }});
-
-    // 背景タップで閉じる（カード内は閉じない）
     tour.addEventListener('click', (e)=>{ if(e.target===tour) endTour(); });
   </script>
 </body>
