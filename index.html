@@ -14,6 +14,7 @@
     :root{
       --bg:#f4f9fb; --card:#ffffff; --ink:#1e2a2d; --muted:#5a6a6d;
       --accent:#578899; --accent-2:#7aa2b0; --shadow:0 10px 30px rgba(35,80,90,.12); --radius:16px;
+      --overlay: rgba(9,30,40,.55);
     }
     html,body{height:100%;}
     body{
@@ -44,6 +45,7 @@
     .field{margin:10px 0 16px;}
     .label{font-size:15px; color:var(--muted); margin:0 0 6px 2px;}
     .label.big{font-size:16px; font-weight:700; color:#324245;}
+    .label-row{display:flex; align-items:center; justify-content:space-between; gap:10px; margin:0 0 6px 2px;}
     .helper{font-size:12px; color:#6a7a7d; margin:4px 2px 0;}
     .ref-title{margin:10px 2px 0; font-size:12px; color:#607c80;}
 
@@ -69,6 +71,11 @@
       border:0; width:100%; border-radius:12px; padding:16px 18px; font-size:17px; box-shadow:var(--shadow);}
     .btn:active{transform:translateY(1px);}
     .btn.secondary{background:#eef7f8; color:var(--accent); box-shadow:none; border:1px solid #d9eaed;}
+
+    .tiny-btn{
+      background:#eef7f8; color:var(--accent); border:1px solid #d9eaed; border-radius:999px;
+      font-size:12px; padding:6px 10px; font-weight:700; line-height:1; box-shadow:none; cursor:pointer;
+    }
 
     .btn-row{display:none; gap:8px; margin-top:12px;} .btn-row.show{display:flex;} .btn-row .btn{flex:1; padding:12px 10px; font-size:15px;}
 
@@ -107,6 +114,34 @@
       text-overflow:clip;
     }
     .mk-mini a{color:inherit; text-decoration:underline; text-underline-offset:2px;}
+
+    /* ▼ チュートリアル */
+    .tour-overlay{
+      position:fixed; inset:0; background:var(--overlay); backdrop-filter:saturate(120%) blur(1px);
+      display:none; z-index:9999;
+    }
+    .tour-overlay.show{display:block;}
+    .tour-highlight{
+      position:relative; z-index:10000 !important;
+      box-shadow:0 0 0 4px rgba(87,136,153,.35), 0 0 0 9999px rgba(0,0,0,0); /* focus ringだけ */
+      border-radius:12px;
+      transition:box-shadow .2s ease;
+    }
+    .tour-card{
+      position:fixed; left:12px; right:12px; bottom:12px;
+      background:#fff; color:#123; border-radius:14px; box-shadow:0 14px 40px rgba(0,0,0,.18);
+      padding:14px 14px 12px; max-width:560px; margin:0 auto;
+    }
+    .tour-ttl{font-weight:800; margin:0 0 4px; font-size:16px;}
+    .tour-txt{font-size:13px; color:#415257; line-height:1.5; margin:0 0 8px;}
+    .tour-actions{display:flex; align-items:center; justify-content:space-between; gap:8px;}
+    .tour-left{display:flex; gap:6px;}
+    .tour-btn{border:0; border-radius:10px; padding:10px 12px; font-weight:800; cursor:pointer;}
+    .tour-btn.primary{background:linear-gradient(180deg,var(--accent-2),var(--accent)); color:#fff;}
+    .tour-btn.ghost{background:#eef7f8; color:var(--accent); border:1px solid #d9eaed;}
+    .tour-steps{display:flex; gap:6px;}
+    .dot{width:6px; height:6px; border-radius:50%; background:#c9d9de;}
+    .dot.on{background:var(--accent);}
   </style>
 </head>
 <body>
@@ -124,8 +159,12 @@
 
     <section class="card" aria-label="入力">
       <!-- ① 支出額 -->
-      <div class="field">
-        <div class="label big">① 支出額（円）</div>
+      <div class="field" id="field-spend">
+        <div class="label-row">
+          <div class="label big">① 支出額（円）</div>
+          <!-- ▶ チュートリアルボタン（右端） -->
+          <button id="tutorialBtn" class="tiny-btn" type="button" aria-haspopup="dialog">チュートリアル</button>
+        </div>
         <div class="range-row">
           <input id="spendRange" type="range" min="0" max="1000000" step="1000" value="100000" />
           <div class="yen-input">
@@ -136,11 +175,10 @@
       </div>
 
       <!-- ② 限界利益率 -->
-      <div class="field">
+      <div class="field" id="field-cmr">
         <div class="label big">② 御社の限界利益率（％）</div>
         <div class="helper">※変動損益計算書もしくは月次決算速報サービスにてご確認ください</div>
         <div class="range-row">
-          <!-- 初期値を 43.6% に変更 -->
           <input id="cmr" type="range" min="5" max="95" step="0.1" value="43.6" />
           <div class="pctbox">
             <input id="cmrInput" class="pct" type="text" inputmode="decimal" value="43.6" />
@@ -149,8 +187,7 @@
         </div>
 
         <div class="ref-title">参考：産業ごとの全国平均</div>
-        <div class="chip-grid">
-          <!-- ▼ 指定の新しい業種別数値 -->
+        <div class="chip-grid" id="chips">
           <button class="chip" type="button" data-pct="43.6"><span class="nm">全産業</span><span class="val">43.6%</span></button>
           <button class="chip" type="button" data-pct="64.6"><span class="nm">漁業</span><span class="val">64.6%</span></button>
           <button class="chip" type="button" data-pct="39.9"><span class="nm">建設業</span><span class="val">39.9%</span></button>
@@ -206,8 +243,24 @@
       <a href="https://www.matsumoto-kaikei.or.jp/" target="_blank" rel="noopener license">税理士法人松本会計事務所</a> ｜ 
       <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="license noopener">CC BY-NC-SA 4.0</a> ｜ 
       <a href="/tool-portal/terms.html" target="_blank" rel="noopener">利用条件</a> ｜ 
-      <span id="build-rev">r26</span>（<span id="last-updated-date"></span>）
+      <span id="build-rev">r27</span>（<span id="last-updated-date"></span>）
     </footer>
+  </div>
+
+  <!-- ▼ チュートリアルオーバーレイ -->
+  <div id="tour" class="tour-overlay" role="dialog" aria-modal="true" aria-labelledby="tourTitle" aria-describedby="tourText">
+    <div class="tour-card">
+      <h2 id="tourTitle" class="tour-ttl"></h2>
+      <p id="tourText" class="tour-txt"></p>
+      <div class="tour-actions">
+        <div class="tour-left">
+          <button id="tourPrev" class="tour-btn ghost" type="button">戻る</button>
+          <button id="tourClose" class="tour-btn ghost" type="button">閉じる</button>
+        </div>
+        <div class="tour-steps" id="tourDots" aria-hidden="true"></div>
+        <button id="tourNext" class="tour-btn primary" type="button">次へ</button>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -221,7 +274,7 @@
     const avgRow = $('#avgRow'), avgPriceEl = $('#avgPrice'), metrics = $('#metrics'), unitsNeededEl = $('#unitsNeeded');
 
     const STORAGE_KEY_CMR = 'cmrPct_v1';
-    const DEFAULT_CMR = 43.6; // ← 初期値を43.6%へ
+    const DEFAULT_CMR = 43.6;
     let lastSalesNeeded = 0;
 
     // 年・最終更新日の自動設定
@@ -362,6 +415,65 @@
 
     // 印刷
     $('#print').addEventListener('click', ()=>{ if(resultArea.hidden){ return; } window.print(); });
+
+    /* ========== チュートリアル ========== */
+    const tour = $('#tour'), tourTitle = $('#tourTitle'), tourText = $('#tourText');
+    const btnNext = $('#tourNext'), btnPrev = $('#tourPrev'), btnClose = $('#tourClose'), tourDots = $('#tourDots');
+    const tutorialBtn = $('#tutorialBtn');
+
+    const steps = [
+      {el:'#field-spend', ttl:'① 支出額（円）', txt:'スライダー or 右側の金額欄に支出額を入力します。スライダーと入力欄は連動します。'},
+      {el:'#field-cmr', ttl:'② 限界利益率（％）', txt:'御社の限界利益率を設定します。スライダーまたは右の数値欄から直接入力できます（0.1%刻み）。'},
+      {el:'#chips', ttl:'産業別の参考値', txt:'分からない場合は業種チップをタップすると、その平均値が反映されます。'},
+      {el:'#calc', ttl:'計算', txt:'「御社の売上相当額を計算」を押すと、必要な売上相当額が表示されます。'},
+      {el:'#resultArea', ttl:'結果', txt:'支出額を売上に換算した結果が表示されます。文章は自動で2行に分かれて読みやすく表示されます。'},
+      {el:'#avgRow', ttl:'平均単価（任意）', txt:'平均単価を入力すると「＝必要販売数」を自動計算します。金額は入力中も3桁カンマで見やすく整形されます。'},
+      {el:'#actionRow', ttl:'コピー／リセット／印刷', txt:'結果をコピー・リセット・印刷できます（計算後に表示）。'}
+    ];
+    let idx = 0, highlighted = null;
+
+    function makeDots(){
+      tourDots.innerHTML = '';
+      for(let i=0;i<steps.length;i++){
+        const d=document.createElement('div'); d.className='dot'+(i===idx?' on':''); tourDots.appendChild(d);
+      }
+    }
+    function highlight(el){
+      if(highlighted){ highlighted.classList.remove('tour-highlight'); highlighted = null; }
+      if(!el) return;
+      el.classList.add('tour-highlight');
+      highlighted = el;
+      el.scrollIntoView({behavior:'smooth', block:'center'});
+    }
+    function showStep(i){
+      idx = Math.max(0, Math.min(steps.length-1, i));
+      const step = steps[idx];
+      tourTitle.textContent = step.ttl;
+      tourText.textContent = step.txt;
+      makeDots();
+      btnPrev.disabled = idx===0;
+      btnNext.textContent = (idx===steps.length-1) ? '完了' : '次へ';
+      const target = document.querySelector(step.el);
+      highlight(target);
+    }
+    function startTour(){
+      tour.classList.add('show');
+      document.body.style.overflow='hidden';
+      showStep(0);
+    }
+    function endTour(){
+      tour.classList.remove('show');
+      document.body.style.overflow='';
+      if(highlighted){ highlighted.classList.remove('tour-highlight'); highlighted=null; }
+    }
+
+    tutorialBtn.addEventListener('click', startTour);
+    btnClose.addEventListener('click', endTour);
+    btnPrev.addEventListener('click', ()=>showStep(idx-1));
+    btnNext.addEventListener('click', ()=>{ if(idx===steps.length-1){ endTour(); } else { showStep(idx+1); }});
+
+    // 背景タップで閉じる（カード内は閉じない）
+    tour.addEventListener('click', (e)=>{ if(e.target===tour) endTour(); });
   </script>
 </body>
 </html>
