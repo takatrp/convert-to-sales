@@ -69,7 +69,7 @@
     .btn:active{transform:translateY(1px);}
     .btn.secondary{background:#eef7f8; color:var(--accent); box-shadow:none; border:1px solid #d9eaed;}
 
-    .tiny-btn{background:#eef7f8; color:var(--accent); border:1px solid #d9eaed; border-radius:999px; font-size:12px;
+    .tiny-btn{background:#eef7f8; color:#578899; border:1px solid #d9eaed; border-radius:999px; font-size:12px;
       padding:6px 10px; font-weight:700; line-height:1; cursor:pointer;}
 
     .btn-row{display:none; gap:8px; margin-top:12px;} .btn-row.show{display:flex;} .btn-row .btn{flex:1; padding:12px 10px; font-size:15px;}
@@ -134,6 +134,7 @@
       <div class="field" id="field-spend" data-focus>
         <div class="label-row">
           <div class="label big">① 支出額（円）</div>
+          <!-- チュートリアル起動ボタン（ラベル右端） -->
           <button id="tutorialBtn" class="tiny-btn" type="button" aria-haspopup="dialog">チュートリアル</button>
         </div>
         <div class="range-row">
@@ -214,7 +215,7 @@
       <a href="https://www.matsumoto-kaikei.or.jp/" target="_blank" rel="noopener license">税理士法人松本会計事務所</a> ｜ 
       <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="license noopener">CC BY-NC-SA 4.0</a> ｜ 
       <a href="/tool-portal/terms.html" target="_blank" rel="noopener">利用条件</a> ｜ 
-      <span id="build-rev">r28</span>（<span id="last-updated-date"></span>）
+      <span id="build-rev">r29</span>（<span id="last-updated-date"></span>）
     </footer>
   </div>
 
@@ -374,12 +375,13 @@
       {el:'#field-spend', ttl:'① 支出額（円）', txt:'スライダー or 右側の金額欄に支出額を入力します。スライダーと入力欄は連動します。'},
       {el:'#field-cmr',   ttl:'② 限界利益率（％）', txt:'御社の限界利益率を設定します。スライダーまたは右の数値欄から直接入力できます（0.1%刻み）。'},
       {el:'#chips',       ttl:'産業別の参考値', txt:'不明な場合は業種チップをタップすると、その平均値が反映されます。'},
-      {el:'#calc',        ttl:'計算', txt:'「御社の売上相当額を計算」を押すと結果が表示されます。'},
-      {el:'#resultArea',  ttl:'結果', txt:'支出額を売上に換算した結果が表示されます。文章は自動で2行に分かれて読みやすく表示されます。'},
+      {el:'#calc',        ttl:'計算', txt:'このステップでは「次へ」を押すだけで自動的に計算を実行します。'},
+      {el:'#resultArea',  ttl:'結果', txt:'支出額を売上に換算した結果が表示されます。メッセージは自動で2行に分かれて読みやすく表示されます。'},
       {el:'#avgRow',      ttl:'平均単価（任意）', txt:'平均単価を入力すると「＝必要販売数」を自動計算します（入力中も3桁カンマ表示）。'},
       {el:'#actionRow',   ttl:'コピー／リセット／印刷', txt:'結果をコピー・リセット・印刷できます（計算後に表示）。'}
     ];
     let idx = 0, highlighted = null;
+    const CALC_STEP = steps.findIndex(s => s.el === '#calc');
 
     function setTourCardHeightVar(){
       const card = document.querySelector('.tour-card');
@@ -446,7 +448,17 @@
     tutorialBtn.addEventListener('click', startTour);
     btnClose.addEventListener('click', endTour);
     btnPrev.addEventListener('click', ()=>showStep(idx-1));
-    btnNext.addEventListener('click', ()=>{ if(idx===steps.length-1){ endTour(); } else { showStep(idx+1); }});
+    btnNext.addEventListener('click', ()=>{
+      // 「計算」ステップで次へ → 自動計算してから次へ
+      if(idx === CALC_STEP){
+        if(resultArea.hidden){ calc(); } // まだなら計算
+        // ちょっと待って画面が整ってから次へ
+        setTimeout(()=> showStep(idx+1), 200);
+        return;
+      }
+      if(idx === steps.length-1){ endTour(); }
+      else { showStep(idx+1); }
+    });
     tour.addEventListener('click', (e)=>{ if(e.target===tour) endTour(); });
   </script>
 </body>
