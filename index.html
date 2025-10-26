@@ -76,24 +76,27 @@
 
   .note{margin-top:10px; color:#6a7a7d; font-size:12px;}
 
-  /* Footer（ポータル仕様・折返し可） */
+  /* Footer（折返し可） */
   .mk-mini{margin:18px 4px 6px; text-align:center; color:#667; font-size:11px; line-height:1.6;}
   .mk-mini a{color:inherit; text-decoration:underline; text-underline-offset:2px;}
 
   /* ---- Tutorial (screenshot-like) ---- */
-  .coach-overlay{position:fixed; inset:0; background:var(--overlay); backdrop-filter:blur(1px); display:none; z-index:9999;}
+  .coach-overlay{
+    position:fixed; inset:0;
+    /* ← 背景は透明に。暗幕は .coach-spot の巨大 shadow で描画する */
+    background:transparent;
+    display:none; z-index:9999;
+  }
   .coach-overlay.show{display:block;}
 
-  /* Spotlight：中央は透過、白の縁取り＋影のみ */
+  /* Spotlight：中央は透過、外周に白縁と影 */
   .coach-spot{
     position:fixed; left:0; top:0; width:100px; height:100px; border-radius:14px;
     box-shadow:
       0 0 0 9999px rgba(9,30,40,.55), /* 暗幕（穴あけ） */
       0 0 0 3px #fff,                  /* 白縁 */
-      0 12px 28px rgba(0,0,0,.25);     /* ドロップシャドウ */
-    background:transparent;
-    box-sizing:border-box;
-    pointer-events:none;
+      0 12px 28px rgba(0,0,0,.25);     /* 影 */
+    background:transparent; box-sizing:border-box; pointer-events:none;
     will-change:transform, width, height;
   }
 
@@ -209,7 +212,7 @@
       <a href="https://www.matsumoto-kaikei.or.jp/" target="_blank" rel="noopener license">税理士法人松本会計事務所</a> ｜ 
       <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="license noopener">CC BY-NC-SA 4.0</a> ｜ 
       <a href="/tool-portal/terms.html" target="_blank" rel="noopener">利用条件</a> ｜ 
-      <span id="build-rev">r31</span>（<span id="last-updated-date"></span>）
+      <span id="build-rev">r32</span>（<span id="last-updated-date"></span>）
     </footer>
   </div>
 
@@ -333,7 +336,7 @@
   });
   $('#print').addEventListener('click', ()=>{ if(resultArea.hidden) return; window.print(); });
 
-  /* --------- Tutorial Engine (screenshot-like) ---------- */
+  /* --------- Tutorial Engine ---------- */
   const coach = $('#coach'), spot = $('#coachSpot'), card = $('#coachCard');
   const tPrev=$('#coachPrev'), tSkip=$('#coachSkip'), tNext=$('#coachNext'), tBtn=$('#tutorialBtn');
   const tStepNow=$('#coachStepNow'), tStepAll=$('#coachStepAll'), tTitle=$('#coachTitle'), tText=$('#coachText');
