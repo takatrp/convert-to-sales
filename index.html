@@ -84,18 +84,20 @@
   .coach-overlay{position:fixed; inset:0; background:var(--overlay); backdrop-filter:blur(1px); display:none; z-index:9999;}
   .coach-overlay.show{display:block;}
 
-  /* Spotlight frame (独立レイヤーで対象を囲う) */
+  /* Spotlight：中央は透過、白の縁取り＋影のみ */
   .coach-spot{
     position:fixed; left:0; top:0; width:100px; height:100px; border-radius:14px;
     box-shadow:
-      0 0 0 9999px rgba(9,30,40,.55), /* 背景暗幕（穴あけ） */
-      0 10px 30px rgba(0,0,0,.25);     /* 縁のドロップシャドウ */
-    background:#fff;                  /* 白い枠内 */
-    padding:10px; box-sizing:content-box;
-    pointer-events:none;              /* クリックを透過（オーバーレイに拾わせる） */
+      0 0 0 9999px rgba(9,30,40,.55), /* 暗幕（穴あけ） */
+      0 0 0 3px #fff,                  /* 白縁 */
+      0 12px 28px rgba(0,0,0,.25);     /* ドロップシャドウ */
+    background:transparent;
+    box-sizing:border-box;
+    pointer-events:none;
+    will-change:transform, width, height;
   }
 
-  /* 説明カード（スポットの近くに出す） */
+  /* 説明カード */
   .coach-card{
     position:fixed; left:50%; transform:translateX(-50%);
     width:min(560px, calc(100vw - 24px)); background:#fff; color:#0d1c22;
@@ -109,7 +111,7 @@
   .coach-btn{border:1px solid #d9eaed; background:#eef7f8; color:#578899; border-radius:10px; padding:8px 12px; font-weight:800; font-size:13px;}
   .coach-btn.primary{background:linear-gradient(180deg,#7aa2b0,#578899); color:#fff; border:0;}
 
-  /* 安全マージン（カードに隠れさせない） */
+  /* カードに隠れないための余白 */
   [data-focus]{scroll-margin-top:12px; scroll-margin-bottom:260px;}
 </style>
 </head>
@@ -207,7 +209,7 @@
       <a href="https://www.matsumoto-kaikei.or.jp/" target="_blank" rel="noopener license">税理士法人松本会計事務所</a> ｜ 
       <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="license noopener">CC BY-NC-SA 4.0</a> ｜ 
       <a href="/tool-portal/terms.html" target="_blank" rel="noopener">利用条件</a> ｜ 
-      <span id="build-rev">r30</span>（<span id="last-updated-date"></span>）
+      <span id="build-rev">r31</span>（<span id="last-updated-date"></span>）
     </footer>
   </div>
 
@@ -272,7 +274,7 @@
   // 平均単価入力（リアルタイムカンマ）
   let composing=false;
   avgPriceEl.addEventListener('compositionstart',()=>composing=true);
-  avgPriceEl.addEventListener('compositionend',()=>composing=false);
+  avgPriceEl.addEventListener('compositionend',()=>{composing=false; updateUnits();});
   const digitsOnly=s=>(s||'').replace(/[^\d]/g,'');
   const groupThousands=d=>!d?'' : d.replace(/^0+(?=\d)/,'').replace(/\B(?=(\d{3})+(?!\d))/g,',');
   const countDigits=s=>(s.match(/\d/g)||[]).length;
@@ -341,7 +343,7 @@
     { el:'#field-cmr',   title:'限界利益率（％）', text:'御社の限界利益率を入力／調整してください（0.1%刻み）。' },
     { el:'#chips',       title:'産業別の参考値', text:'不明な場合は業種チップを押すと全国平均が反映されます。' },
     { el:'#calc',        title:'計算', text:'次へ を押すと自動で計算を行い、結果を表示します。', onNext:()=>{ if(resultArea.hidden) calc(); } },
-    { el:'#resultArea',  title:'御社の売上相当額', text:'支出を売上ベースに換算した結果がここに表示されます。' },
+    { el:'#resultArea',  title:'御社の売上相当額', text:'支出を売上ベースに換算した結果が表示されます。' },
     { el:'#avgRow',      title:'平均単価（任意）', text:'平均単価を入力すると「＝必要販売数」を自動計算します。' },
     { el:'#actionRow',   title:'コピー／リセット／印刷', text:'結果の共有や再試算、印刷ができます。' }
   ];
@@ -351,23 +353,21 @@
 
   function layoutCoach(){
     if(!targetEl) return;
-    // ターゲット位置
     const r=targetEl.getBoundingClientRect();
-    const pad=10, rad=14;
-    spot.style.left=(r.left-pad)+'px';
-    spot.style.top=(r.top-pad)+'px';
-    spot.style.width=r.width+'px';
-    spot.style.height=r.height+'px';
-    spot.style.borderRadius=rad+'px';
+    const pad = 6, rad = 14;
+    spot.style.left  = (r.left - pad) + 'px';
+    spot.style.top   = (r.top  - pad) + 'px';
+    spot.style.width = (r.width  + pad*2) + 'px';
+    spot.style.height= (r.height + pad*2) + 'px';
+    spot.style.borderRadius = rad + 'px';
 
-    // カード位置（デフォはスポットの下12px）
+    // カード位置（基本はスポットの下 / 入らなければ上）
     const cardRect = card.getBoundingClientRect();
     let top = r.bottom + 12;
-    if(top + cardRect.height + 12 > window.innerHeight){ // 収まらなければ上に
+    if(top + cardRect.height + 12 > window.innerHeight){
       top = r.top - cardRect.height - 12;
       if(top < 12) top = Math.max(12, window.innerHeight - cardRect.height - 12);
     }
-    // 横位置はスポットに合わせ右寄せ気味
     let left = Math.min(window.innerWidth - 12, Math.max(12, r.right - cardRect.width));
     card.style.top = top + 'px';
     card.style.left = left + 'px';
@@ -384,12 +384,10 @@
     targetEl = document.querySelector(s.el);
     if(!targetEl) return;
 
-    // スクロール（カードが被らないよう余白を考慮）
     targetEl.scrollIntoView({behavior:'smooth', block:'center'});
     requestAnimationFrame(()=>{ layoutCoach(); });
-    setTimeout(layoutCoach, 250); // レイアウト安定後にも再配置
+    setTimeout(layoutCoach, 250);
 
-    // ボタン
     tPrev.disabled = (ti===0);
     tNext.textContent = (ti===steps.length-1)?'完了':'次へ';
   }
@@ -421,10 +419,10 @@
     if(s.onNext) s.onNext();
     if(ti===steps.length-1) endTutorial(); else showStep(ti+1);
   });
-  // カード内クリックはバブリング止める（ボタン以外のクリックも次へになるのを防止）
-  card.addEventListener('click', e=>e.stopPropagation());
+  // カード内クリックはバブリング抑止
+  document.getElementById('coachCard').addEventListener('click', e=>e.stopPropagation());
 
-  // Enter/Spaceでも次へ
+  // Enter / Spaceでも次へ、Escで閉じる、←/→で前後
   document.addEventListener('keydown', e=>{
     if(!coach.classList.contains('show')) return;
     if(e.key==='Enter' || e.key===' '){
@@ -438,7 +436,7 @@
     if(e.key==='ArrowRight'){ const s=steps[ti]; if(s.onNext) s.onNext(); showStep(Math.min(steps.length-1, ti+1)); }
   });
 
-  // リサイズ・回転時は再配置
+  // リサイズ・回転時再配置
   window.addEventListener('resize', ()=>{ if(coach.classList.contains('show')) layoutCoach(); });
   window.addEventListener('orientationchange', ()=>{ if(coach.classList.contains('show')) setTimeout(layoutCoach, 300); });
 </script>
