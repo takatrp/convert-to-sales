@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>それ、売上に直すといくらですか？</title>
 
+<!-- Favicon / PWA icons -->
 <link rel="icon" href="favicon192192.png" sizes="192x192" />
 <link rel="apple-touch-icon" href="favicon192192.png" />
 <meta name="theme-color" content="#578899" />
@@ -24,8 +25,7 @@
   .brand{display:flex; align-items:center; gap:10px;}
   .logo-link{display:inline-flex; line-height:0; text-decoration:none;}
   .logo{height:48px; width:auto; object-fit:contain; flex:0 0 auto;}
-  .title{flex:1; min-width:0; font-weight:800; letter-spacing:.02em; line-height:1.2; margin:0; white-space:nowrap; font-size:clamp(16px,4.6vw,24px);}
-  @media (max-width:360px){ .title{font-size:clamp(15px,4.2vw,20px);} }
+  .title{flex:1; min-width:0; font-weight:800; letter-spacing:.02em; line-height:1.2; margin:0; white-space:nowrap; font-size:clamp(16px,4.6vw,24px); color:#0e2430;}
   .subtitle{color:var(--muted); font-size:12px; margin:6px 0 0;}
 
   .card{background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); padding:18px 16px; margin:12px 0 18px;}
@@ -53,7 +53,7 @@
 
   .btn{background:linear-gradient(180deg,#7aa2b0,#578899); color:#fff; font-weight:900; border:0; width:100%; border-radius:12px; padding:16px 18px; font-size:17px; box-shadow:var(--shadow);}
   .btn:active{transform:translateY(1px);}
-  .btn.secondary{background:#eef7f8; color:var(--accent); box-shadow:none; border:1px solid #d9eaed;}
+  .btn.secondary{background:#eef7f8; color:#578899; box-shadow:none; border:1px solid #d9eaed;}
   .tiny-btn{background:#eef7f8; color:#578899; border:1px solid #d9eaed; border-radius:999px; font-size:12px; padding:6px 10px; font-weight:700; line-height:1; cursor:pointer;}
 
   .btn-row{display:none; gap:8px; margin-top:12px;} .btn-row.show{display:flex;} .btn-row .btn{flex:1; padding:12px 10px; font-size:15px;}
@@ -76,37 +76,38 @@
 
   .note{margin-top:10px; color:#6a7a7d; font-size:12px;}
 
-  /* Footer（折返し可） */
+  /* Footer（ポータル仕様・折返し可） */
   .mk-mini{margin:18px 4px 6px; text-align:center; color:#667; font-size:11px; line-height:1.6;}
   .mk-mini a{color:inherit; text-decoration:underline; text-underline-offset:2px;}
 
   /* ---- Tutorial (screenshot-like) ---- */
   .coach-overlay{
     position:fixed; inset:0;
-    /* ← 背景は透明に。暗幕は .coach-spot の巨大 shadow で描画する */
-    background:transparent;
+    background:transparent;           /* 暗幕はスポットの巨大shadowで描画 */
     display:none; z-index:9999;
   }
   .coach-overlay.show{display:block;}
 
-  /* Spotlight：中央は透過、外周に白縁と影 */
+  /* Spotlight：中央は完全透過、外周のみ白縁＋影＋暗幕 */
   .coach-spot{
     position:fixed; left:0; top:0; width:100px; height:100px; border-radius:14px;
     box-shadow:
       0 0 0 9999px rgba(9,30,40,.55), /* 暗幕（穴あけ） */
-      0 0 0 3px #fff,                  /* 白縁 */
-      0 12px 28px rgba(0,0,0,.25);     /* 影 */
+      0 0 0 3px #fff,                  /* 白い縁取り */
+      0 12px 28px rgba(0,0,0,.25);     /* ドロップシャドウ */
     background:transparent; box-sizing:border-box; pointer-events:none;
     will-change:transform, width, height;
   }
 
-  /* 説明カード */
+  /* 説明カード：常に中央寄せで右切れ防止 */
   .coach-card{
     position:fixed; left:50%; transform:translateX(-50%);
-    width:min(560px, calc(100vw - 24px)); background:#fff; color:#0d1c22;
+    max-width:calc(100vw - 32px); width:420px;  /* 両端16pxマージン */
+    background:#fff; color:#0d1c22;
     border-radius:12px; box-shadow:0 12px 30px rgba(0,0,0,.2);
     padding:14px; z-index:10000;
   }
+  @media (max-width:480px){ .coach-card{ width:calc(100vw - 32px); } }
   .coach-step{font-size:12px; color:#6b7b80; letter-spacing:.02em; margin-bottom:4px;}
   .coach-title{font-weight:800; font-size:14px; color:#1a2d31; display:inline;}
   .coach-text{font-size:13px; color:#2c3f44; line-height:1.6; margin:6px 0 10px;}
@@ -212,7 +213,7 @@
       <a href="https://www.matsumoto-kaikei.or.jp/" target="_blank" rel="noopener license">税理士法人松本会計事務所</a> ｜ 
       <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="license noopener">CC BY-NC-SA 4.0</a> ｜ 
       <a href="/tool-portal/terms.html" target="_blank" rel="noopener">利用条件</a> ｜ 
-      <span id="build-rev">r32</span>（<span id="last-updated-date"></span>）
+      <span id="build-rev">r34</span>（<span id="last-updated-date"></span>）
     </footer>
   </div>
 
@@ -251,20 +252,28 @@
     $('#last-updated-date').textContent=`${lm.getFullYear()}-${String(lm.getMonth()+1).padStart(2,'0')}-${String(lm.getDate()).padStart(2,'0')}`;
   })();
 
+  // ---- parsing / formatting helpers ----
   function parseMoney(t){ if(t==null) return NaN; return Number(String(t).replace(/[^\d.-]/g,'')); }
   function formatJPY(n){ return n.toLocaleString('ja-JP',{style:'currency',currency:'JPY',maximumFractionDigits:0}); }
   function formatPlainJPY(n){ return n.toLocaleString('ja-JP',{maximumFractionDigits:0}); }
   function parsePct(t){ if(t==null) return NaN; const s=String(t).replace('%','').replace(',', '.').trim(); return Number(s); }
   function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
 
+  // ---- persist CMR ----
   function loadCmr(){ try{ const v=parsePct(localStorage.getItem(STORAGE_KEY_CMR)); if(!isNaN(v)) return clamp(v, +cmrRange.min, +cmrRange.max);}catch{} return DEFAULT_CMR; }
   function saveCmr(v){ try{ localStorage.setItem(STORAGE_KEY_CMR, Number(v).toFixed(1)); }catch{} }
 
-  // 双方向入力
+  // ---- Spend input sync ----
   spendRange.addEventListener('input', ()=>{ spendEl.value=formatPlainJPY(+spendRange.value); });
-  spendEl.addEventListener('input', e=>{ const val=parseMoney(e.target.value); if(isNaN(val)) return; e.target.value=formatPlainJPY(val); spendRange.value=clamp(val,+spendRange.min,+spendRange.max); });
+  spendEl.addEventListener('input', e=>{
+    const val=parseMoney(e.target.value);
+    if(isNaN(val)) return;
+    e.target.value=formatPlainJPY(val);
+    spendRange.value=clamp(val,+spendRange.min,+spendRange.max);
+  });
   spendRange.dispatchEvent(new Event('input'));
 
+  // ---- CMR inputs sync & persistence ----
   const initCmr=loadCmr(); cmrRange.value=initCmr.toFixed(1); cmrInput.value=initCmr.toFixed(1);
   function syncCmrFromSlider(){ if(document.activeElement===cmrInput) return; const v=+cmrRange.value; cmrInput.value=v.toFixed(1); saveCmr(v); }
   cmrRange.addEventListener('input', syncCmrFromSlider);
@@ -272,24 +281,40 @@
   cmrInput.addEventListener('input', ()=>{ const v=parsePct(cmrInput.value); if(!isNaN(v)&&v>=+cmrRange.min&&v<=+cmrRange.max){ cmrRange.value=v.toFixed(1);} });
   cmrInput.addEventListener('blur', commitCmrInput);
 
-  document.querySelectorAll('.chip-grid .chip').forEach(b=> b.addEventListener('click', ()=>{ const v=+b.dataset.pct; cmrRange.value=v.toFixed(1); cmrInput.value=v.toFixed(1); saveCmr(v); cmrInput.blur(); }));
+  // ---- Chips ----
+  document.querySelectorAll('.chip-grid .chip').forEach(b=> b.addEventListener('click', ()=>{
+    const v=+b.dataset.pct; cmrRange.value=v.toFixed(1); cmrInput.value=v.toFixed(1); saveCmr(v); cmrInput.blur();
+  }));
 
-  // 平均単価入力（リアルタイムカンマ）
+  // ---- Avg price realtime comma, robust IME ----
   let composing=false;
   avgPriceEl.addEventListener('compositionstart',()=>composing=true);
   avgPriceEl.addEventListener('compositionend',()=>{composing=false; updateUnits();});
   const digitsOnly=s=>(s||'').replace(/[^\d]/g,'');
   const groupThousands=d=>!d?'' : d.replace(/^0+(?=\d)/,'').replace(/\B(?=(\d{3})+(?!\d))/g,',');
   const countDigits=s=>(s.match(/\d/g)||[]).length;
-  function toHalfWidthDigits(str){ if(!str) return ''; str=str.replace(/[０-９]/g,s=>String.fromCharCode(s.charCodeAt(0)-0xFEE0)); const map={'⓪':'0','①':'1','②':'2','③':'3','④':'4','⑤':'5','⑥':'6','⑦':'7','⑧':'8','⑨':'9'}; return str.replace(/[⓪①②③④⑤⑥⑦⑧⑨]/g,s=>map[s]||s); }
-  function caretFromDigits(formatted,n){ if(n<=0) return 0; let seen=0; for(let i=0;i<formatted.length;i++){ const ch=formatted[i]; if(ch>='0'&&ch<='9') seen++; if(seen===n) return i+1; } return formatted.length; }
+  function toHalfWidthDigits(str){
+    if(!str) return '';
+    str=str.replace(/[０-９]/g,s=>String.fromCharCode(s.charCodeAt(0)-0xFEE0));
+    const map={'⓪':'0','①':'1','②':'2','③':'3','④':'4','⑤':'5','⑥':'6','⑦':'7','⑧':'8','⑨':'9'};
+    return str.replace(/[⓪①②③④⑤⑥⑦⑧⑨]/g,s=>map[s]||s);
+  }
+  function caretFromDigits(formatted,n){
+    if(n<=0) return 0; let seen=0;
+    for(let i=0;i<formatted.length;i++){ const ch=formatted[i]; if(ch>='0'&&ch<='9') seen++; if(seen===n) return i+1; }
+    return formatted.length;
+  }
   function formatAvgInputRealtime(e){
     if(composing) return;
     const el=e.target, old=String(el.value), caret=el.selectionStart ?? old.length, left=old.slice(0,caret);
     const before=countDigits(digitsOnly(toHalfWidthDigits(left)));
     const raw=digitsOnly(toHalfWidthDigits(old));
     const fmt=groupThousands(raw);
-    if(fmt!==old){ el.value=fmt; const pos=caretFromDigits(fmt,before); requestAnimationFrame(()=>{ try{ el.setSelectionRange(pos,pos);}catch{} }); }
+    if(fmt!==old){
+      el.value=fmt;
+      const pos=caretFromDigits(fmt,before);
+      requestAnimationFrame(()=>{ try{ el.setSelectionRange(pos,pos);}catch{} });
+    }
     updateUnits();
   }
   avgPriceEl.addEventListener('input', formatAvgInputRealtime);
@@ -300,7 +325,7 @@
     unitsNeededEl.textContent = (!isNaN(avg)&&avg>0)? (lastSalesNeeded/avg).toFixed(1) : '—';
   }
 
-  // 計算
+  // ---- Calculate ----
   function calc(){
     commitCmrInput();
     const spend=parseMoney(spendEl.value);
@@ -318,7 +343,7 @@
   cmrInput.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); calc(); }});
   spendEl.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); calc(); }});
 
-  // 操作系
+  // ---- Copy / Reset / Print ----
   $('#copy').addEventListener('click', async ()=>{
     if(resultArea.hidden) return;
     const avgTxt = avgPriceEl.value ? `平均単価: ¥${avgPriceEl.value}` : '平均単価: 未入力';
@@ -336,7 +361,7 @@
   });
   $('#print').addEventListener('click', ()=>{ if(resultArea.hidden) return; window.print(); });
 
-  /* --------- Tutorial Engine ---------- */
+  /* ================= Tutorial Engine ================= */
   const coach = $('#coach'), spot = $('#coachSpot'), card = $('#coachCard');
   const tPrev=$('#coachPrev'), tSkip=$('#coachSkip'), tNext=$('#coachNext'), tBtn=$('#tutorialBtn');
   const tStepNow=$('#coachStepNow'), tStepAll=$('#coachStepAll'), tTitle=$('#coachTitle'), tText=$('#coachText');
@@ -351,8 +376,7 @@
     { el:'#actionRow',   title:'コピー／リセット／印刷', text:'結果の共有や再試算、印刷ができます。' }
   ];
 
-  let ti = 0, targetEl=null;
-  tStepAll.textContent = steps.length;
+  let ti = 0, targetEl=null; tStepAll.textContent = steps.length;
 
   function layoutCoach(){
     if(!targetEl) return;
@@ -364,17 +388,16 @@
     spot.style.height= (r.height + pad*2) + 'px';
     spot.style.borderRadius = rad + 'px';
 
-    // カード位置（基本はスポットの下 / 入らなければ上）
+    // カード位置（中央寄せ固定）
     const cardRect = card.getBoundingClientRect();
     let top = r.bottom + 12;
     if(top + cardRect.height + 12 > window.innerHeight){
       top = r.top - cardRect.height - 12;
       if(top < 12) top = Math.max(12, window.innerHeight - cardRect.height - 12);
     }
-    let left = Math.min(window.innerWidth - 12, Math.max(12, r.right - cardRect.width));
     card.style.top = top + 'px';
-    card.style.left = left + 'px';
-    card.style.transform = 'none';
+    card.style.left = '50%';
+    card.style.transform = 'translateX(-50%)';
   }
 
   function showStep(i){
