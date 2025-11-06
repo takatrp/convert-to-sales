@@ -13,7 +13,6 @@
   :root{
     --bg:#f4f9fb; --card:#fff; --ink:#1e2a2d; --muted:#5a6a6d;
     --accent:#578899; --accent-2:#7aa2b0; --shadow:0 10px 30px rgba(35,80,90,.12);
-    --radius:16px;
   }
   html,body{height:100%}
   body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink)}
@@ -27,7 +26,7 @@
   .title{flex:1;min-width:0;white-space:nowrap;margin:0;font-weight:800;letter-spacing:.02em;line-height:1.2;font-size:clamp(16px,4.6vw,24px);color:#0e2430}
   .subtitle{color:#5a6a6d;font-size:12px;margin:6px 0 0}
 
-  .card{background:#fff;border-radius:16px;box-shadow:var(--shadow);padding:18px 16px;margin:12px 0 18px}
+  .card{background:#fff;border-radius:16px;box-shadow:0 10px 30px rgba(35,80,90,.12);padding:18px 16px;margin:12px 0 18px}
   .field{margin:10px 0 16px}
   .label.big{font-size:16px;font-weight:700;color:#324245}
   .label-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 6px 2px}
@@ -49,7 +48,7 @@
   .chip{display:flex;align-items:center;justify-content:space-between;border:1px solid #d9eaed;background:#f3fafb;color:#578899;padding:8px 10px;border-radius:12px;font-size:12px;line-height:1.05;cursor:pointer}
   .chip .nm{font-weight:700}.chip .val{font-weight:900;color:#1f3a3e;font-feature-settings:"tnum"}
 
-  .btn{background:linear-gradient(180deg,#7aa2b0,#578899);color:#fff;font-weight:900;border:0;width:100%;border-radius:12px;padding:16px 18px;font-size:17px;box-shadow:var(--shadow)}
+  .btn{background:linear-gradient(180deg,#7aa2b0,#578899);color:#fff;font-weight:900;border:0;width:100%;border-radius:12px;padding:16px 18px;font-size:17px;box-shadow:0 10px 30px rgba(35,80,90,.12)}
   .btn:active{transform:translateY(1px)}
   .btn.secondary{background:#eef7f8;color:#578899;box-shadow:none;border:1px solid #d9eaed}
   .tiny-btn{background:#eef7f8;color:#578899;border:1px solid #d9eaed;border-radius:999px;font-size:12px;padding:6px 10px;font-weight:700;cursor:pointer;line-height:1}
@@ -79,7 +78,7 @@
   .mk-mini{margin:18px 4px 6px;text-align:center;color:#667;font-size:11px;line-height:1.6}
   .mk-mini a{color:inherit;text-decoration:underline;text-underline-offset:2px}
 
-  /* tutorial overlay */
+  /* tutorial */
   .coach-overlay{position:fixed;inset:0;background:transparent;display:none;z-index:9999}
   .coach-overlay.show{display:block}
   .coach-spot{
@@ -88,8 +87,7 @@
       0 0 0 9999px rgba(9,30,40,.55),
       0 0 0 3px #fff,
       0 12px 28px rgba(0,0,0,.25);
-    background:transparent;pointer-events:none;box-sizing:border-box;
-    will-change:transform,width,height
+    background:transparent;pointer-events:none;box-sizing:border-box
   }
   .coach-card{
     position:fixed;left:50%;transform:translateX(-50%);
@@ -97,15 +95,15 @@
     border-radius:12px;box-shadow:0 12px 30px rgba(0,0,0,.2);padding:14px;z-index:10000
   }
   @media (max-width:480px){.coach-card{width:calc(100vw - 32px)}}
-  .coach-step{font-size:12px;color:#6b7b80;margin-bottom:4px;letter-spacing:.02em}
+  .coach-step{font-size:12px;color:#6b7b80;margin-bottom:4px}
   .coach-title{font-weight:800;font-size:14px;color:#1a2d31}
   .coach-text{font-size:13px;color:#2c3f44;line-height:1.6;margin:6px 0 10px}
   .coach-actions{display:flex;gap:8px;justify-content:flex-end}
   .coach-btn{border:1px solid #d9eaed;background:#eef7f8;color:#578899;border-radius:10px;padding:8px 12px;font-weight:800;font-size:13px}
   .coach-btn.primary{background:linear-gradient(180deg,#7aa2b0,#578899);color:#fff;border:0}
 
-  /* 余白（カードが被らないよう多めに確保） */
-  [data-focus]{scroll-margin-top:12px;scroll-margin-bottom:360px}
+  /* 余白（下部ボタンのため多め） */
+  [data-focus]{scroll-margin-top:12px;scroll-margin-bottom:420px}
 </style>
 </head>
 <body>
@@ -198,7 +196,7 @@
     <a href="https://www.matsumoto-kaikei.or.jp/" target="_blank" rel="noopener license">税理士法人松本会計事務所</a> ｜ 
     <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="license noopener">CC BY-NC-SA 4.0</a> ｜ 
     <a href="/tool-portal/terms.html" target="_blank" rel="noopener">利用条件</a> ｜ 
-    <span id="build-rev">r36</span>（<span id="last-updated-date"></span>）
+    <span id="build-rev">r37</span>（<span id="last-updated-date"></span>）
   </footer>
 </div>
 
@@ -226,7 +224,7 @@
   const avgRow=$('#avgRow'),avgPriceEl=$('#avgPrice'),metrics=$('#metrics'),unitsNeededEl=$('#unitsNeeded');
 
   const STORAGE_KEY_CMR='cmrPct_v1';
-  const DEFAULT_CMR=43.6;
+  const DEFAULT_CMR=43.6; // プリセット値（保存値があればそちらを優先）
   let lastSalesNeeded=0;
 
   // footer date
@@ -244,18 +242,39 @@
   const parsePct=t=>Number(String(t??'').replace('%','').replace(',', '.').trim());
 
   // persist CMR
-  function loadCmr(){ try{const v=parsePct(localStorage.getItem(STORAGE_KEY_CMR)); if(!isNaN(v)) return clamp(v,+cmrRange.min,+cmrRange.max);}catch{} return DEFAULT_CMR; }
+  function loadCmr(){
+    try{
+      const v=parsePct(localStorage.getItem(STORAGE_KEY_CMR));
+      if(!isNaN(v)) return clamp(v,+cmrRange.min,+cmrRange.max);
+    }catch{}
+    return DEFAULT_CMR;
+  }
   function saveCmr(v){ try{localStorage.setItem(STORAGE_KEY_CMR, Number(v).toFixed(1));}catch{} }
 
   // inputs sync
   spendRange.addEventListener('input',()=>{spendEl.value=formatPlainJPY(+spendRange.value)});
-  spendEl.addEventListener('input',e=>{const val=parseMoney(e.target.value); if(isNaN(val))return; e.target.value=formatPlainJPY(val); spendRange.value=clamp(val,+spendRange.min,+spendRange.max)});
+  spendEl.addEventListener('input',e=>{
+    const val=parseMoney(e.target.value); if(isNaN(val))return;
+    e.target.value=formatPlainJPY(val); spendRange.value=clamp(val,+spendRange.min,+spendRange.max)
+  });
   spendRange.dispatchEvent(new Event('input'));
 
   const initCmr=loadCmr(); cmrRange.value=initCmr.toFixed(1); cmrInput.value=initCmr.toFixed(1);
-  cmrRange.addEventListener('input',()=>{ if(document.activeElement!==cmrInput){ const v=+cmrRange.value; cmrInput.value=v.toFixed(1); saveCmr(v);} });
-  function commitCmrInput(){ const v=parsePct(cmrInput.value); if(isNaN(v)){ cmrInput.value=(+cmrRange.value).toFixed(1); return; } const c=clamp(v,+cmrRange.min,+cmrRange.max); cmrRange.value=c.toFixed(1); cmrInput.value=c.toFixed(1); saveCmr(c); }
-  cmrInput.addEventListener('input',()=>{ const v=parsePct(cmrInput.value); if(!isNaN(v)&&v>=+cmrRange.min&&v<=+cmrRange.max){ cmrRange.value=v.toFixed(1);} });
+  cmrRange.addEventListener('input',()=>{
+    if(document.activeElement!==cmrInput){
+      const v=+cmrRange.value; cmrInput.value=v.toFixed(1); saveCmr(v);
+    }
+  });
+  function commitCmrInput(){
+    const v=parsePct(cmrInput.value);
+    if(isNaN(v)){ cmrInput.value=(+cmrRange.value).toFixed(1); return; }
+    const c=clamp(v,+cmrRange.min,+cmrRange.max);
+    cmrRange.value=c.toFixed(1); cmrInput.value=c.toFixed(1); saveCmr(c);
+  }
+  cmrInput.addEventListener('input',()=>{
+    const v=parsePct(cmrInput.value);
+    if(!isNaN(v)&&v>=+cmrRange.min&&v<=+cmrRange.max){ cmrRange.value=v.toFixed(1); }
+  });
   cmrInput.addEventListener('blur', commitCmrInput);
 
   // chips
@@ -263,7 +282,7 @@
     const v=+b.dataset.pct; cmrRange.value=v.toFixed(1); cmrInput.value=v.toFixed(1); saveCmr(v); cmrInput.blur();
   }));
 
-  // avg price realtime comma (IME safed)
+  // avg price realtime comma (IMEセーフ)
   let composing=false;
   avgPriceEl.addEventListener('compositionstart',()=>composing=true);
   avgPriceEl.addEventListener('compositionend',()=>{composing=false; updateUnits();});
@@ -330,7 +349,7 @@
   });
   $('#print').addEventListener('click',()=>{ if(resultArea.hidden) return; window.print(); });
 
-  /* ===== Tutorial Engine (改良版) ===== */
+  /* ===== Tutorial Engine（STEP7: ボタンを必ず見せる） ===== */
   const coach=$('#coach'),spot=$('#coachSpot'),card=$('#coachCard');
   const tPrev=$('#coachPrev'),tSkip=$('#coachSkip'),tNext=$('#coachNext'),tBtn=$('#tutorialBtn');
   const tStepNow=$('#coachStepNow'),tStepAll=$('#coachStepAll'),tTitle=$('#coachTitle'),tText=$('#coachText');
@@ -342,12 +361,11 @@
     { el:'#calc',        title:'計算',                    text:'次へ を押すと自動で計算を行い、結果を表示します。',             place:'below', onNext:()=>{ if(resultArea.hidden) calc(); } },
     { el:'#sales',       title:'御社の売上相当額',        text:'支出を売上ベースに換算した結果が表示されます。',               place:'above' },
     { el:'#avgRow',      title:'平均単価（任意）',        text:'平均単価を入力すると「＝必要販売数」を自動計算します。',        place:'below' },
-    { el:'#actionRow',   title:'コピー／リセット／印刷', text:'結果の共有や再試算、印刷ができます。',                         place:'below' }
+    { el:'#actionRow',   title:'コピー／リセット／印刷', text:'結果の共有や再試算、印刷ができます。',                         place:'above' }  /* ← ここを上側固定 */
   ];
   tStepAll.textContent=steps.length;
   let ti=0, targetEl=null;
 
-  // レイアウトと重なり回避
   function layoutCoach(){
     if(!targetEl) return;
     const r=targetEl.getBoundingClientRect();
@@ -373,18 +391,15 @@
     if(pref==='above') finalTop=topAbove;
     else if(pref==='below') finalTop=topBelow;
     else {
-      // auto: 重なり量が小さい方
       const overlapBelow=Math.max(0,(r.bottom+gap)-topBelow);
       const overlapAbove=Math.max(0,(topAbove+cardRect.height)-(r.top-gap));
       finalTop = overlapBelow<=overlapAbove ? topBelow : topAbove;
     }
-
     card.style.top=finalTop+'px';
     card.style.left='50%';
     card.style.transform='translateX(-50%)';
   }
 
-  // 表示と自動スクロールでの余白確保
   function ensureSeparation(){
     const s=steps[ti]; if(!s) return;
     const r=targetEl.getBoundingClientRect();
@@ -410,12 +425,13 @@
     targetEl=document.querySelector(s.el);
     if(!targetEl) return;
 
-    targetEl.scrollIntoView({behavior:'smooth',block:'center'});
-    requestAnimationFrame(()=>{ layoutCoach(); });
+    // ボタン行（STEP7）は画面下寄りに来やすいので end でスクロール
+    targetEl.scrollIntoView({behavior:'smooth',block:(s.place==='above'?'end':'center')});
+    requestAnimationFrame(layoutCoach);
     setTimeout(()=>{ layoutCoach(); ensureSeparation(); }, 350);
 
-    $('#coachPrev').disabled=(ti===0);
-    $('#coachNext').textContent=(ti===steps.length-1)?'完了':'次へ';
+    tPrev.disabled=(ti===0);
+    tNext.textContent=(ti===steps.length-1)?'完了':'次へ';
   }
 
   function startTutorial(){ document.body.style.overflow='hidden'; $('#coach').classList.add('show'); showStep(0); }
@@ -429,15 +445,12 @@
     const s=steps[ti]; if(s.onNext) s.onNext();
     if(ti===steps.length-1) endTutorial(); else showStep(ti+1);
   });
-  // 背景クリックでも次へ
   $('#coach').addEventListener('click',()=>{
     const s=steps[ti]; if(s.onNext) s.onNext();
     if(ti===steps.length-1) endTutorial(); else showStep(ti+1);
   });
-  // カードはクリックで進まない
   $('#coachCard').addEventListener('click',e=>e.stopPropagation());
 
-  // キー操作
   document.addEventListener('keydown',e=>{
     if(!$('#coach').classList.contains('show')) return;
     if(e.key==='Enter'||e.key===' '){ e.preventDefault(); const s=steps[ti]; if(s.onNext) s.onNext(); if(ti===steps.length-1) endTutorial(); else showStep(ti+1); }
@@ -448,6 +461,11 @@
 
   window.addEventListener('resize',()=>{ if($('#coach').classList.contains('show')) layoutCoach(); });
   window.addEventListener('orientationchange',()=>{ if($('#coach').classList.contains('show')) setTimeout(layoutCoach,300); });
+
+  // 初期値（保存がなければ43.6%）
+  (function initDefaults(){
+    const cmr0=loadCmr(); cmrRange.value=cmr0.toFixed(1); cmrInput.value=cmr0.toFixed(1);
+  })();
 </script>
 </body>
 </html>
