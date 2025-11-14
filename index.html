@@ -218,7 +218,8 @@
   [data-focus]{scroll-margin-top:12px;scroll-margin-bottom:420px}
 
   /* 動画モーダル */
-  .video-modal{
+  .video-modal,
+  .image-modal{
     position:fixed;
     inset:0;
     background:rgba(0,0,0,.55);
@@ -229,8 +230,10 @@
     box-sizing:border-box;
     z-index:11000;
   }
-  .video-modal.show{display:flex;}
-  .video-dialog{
+  .video-modal.show,
+  .image-modal.show{display:flex;}
+  .video-dialog,
+  .image-dialog{
     background:#000;
     border-radius:12px;
     max-width:640px;
@@ -239,6 +242,15 @@
     position:relative;
   }
   .video-dialog video{
+    width:100%;
+    height:auto;
+    display:block;
+    border-radius:12px;
+  }
+  .image-dialog{
+    background:#fff;
+  }
+  .image-dialog img{
     width:100%;
     height:auto;
     display:block;
@@ -288,7 +300,7 @@
       <div class="label big">② 御社の限界利益率（％）</div>
       <div class="helper">
         ※<a href="#" id="openCmrVideo" class="inline-link">変動損益計算書</a>
-        もしくは月次決算速報サービスにてご確認ください
+        もしくは <a href="#" id="openMonthlyImg" class="inline-link">月次決算速報サービス</a> にてご確認ください
       </div>
       <div class="range-row">
         <input id="cmr" type="range" min="5" max="95" step="0.1" value="43.6" />
@@ -351,11 +363,11 @@
     <a href="https://www.matsumoto-kaikei.or.jp/" target="_blank" rel="noopener license">税理士法人松本会計事務所</a> ｜ 
     <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="license noopener">CC BY-NC-SA 4.0</a> ｜ 
     <a href="/tool-portal/terms.html" target="_blank" rel="noopener">利用条件</a> ｜ 
-    <span id="build-rev">r38</span>（<span id="last-updated-date"></span>）
+    <span id="build-rev">r39</span>（<span id="last-updated-date"></span>）
   </footer>
 </div>
 
-<!-- 限界利益率の確認方法 動画モーダル -->
+<!-- 限界利益率の確認方法（FXC）動画モーダル -->
 <div id="videoModal" class="video-modal" aria-hidden="true">
   <div class="video-dialog" role="dialog" aria-label="限界利益率の確認方法（FXC）の動画">
     <button type="button" class="video-close" id="closeVideo" aria-label="閉じる">×</button>
@@ -363,6 +375,14 @@
       <source src="限界利益率の確認方法（FXC）.mp4" type="video/mp4" />
       お使いのブラウザでは動画を再生できません。
     </video>
+  </div>
+</div>
+
+<!-- 月次決算速報サービス画像モーダル -->
+<div id="imgModal" class="image-modal" aria-hidden="true">
+  <div class="image-dialog" role="dialog" aria-label="限界利益率の確認方法（月次決算速報サービス）の画像">
+    <button type="button" class="video-close" id="closeImg" aria-label="閉じる">×</button>
+    <img id="cmrImg" src="限界利益率の確認方法（月次決算速報サービス）.png" alt="限界利益率の確認方法（月次決算速報サービス）" />
   </div>
 </div>
 
@@ -397,7 +417,8 @@
   (function(){
     const y=new Date().getFullYear(), lm=new Date(document.lastModified);
     $('#cpy-year').textContent=y;
-    $('#last-updated-date').textContent=`${lm.getFullYear()}-${String(lm.getMonth()+1).padStart(2,'0')}-${String(lm.getDate()).padStart(2,'0')}`;
+    $('#last-updated-date').textContent=
+      `${lm.getFullYear()}-${String(lm.getMonth()+1).padStart(2,'0')}-${String(lm.getDate()).padStart(2,'0')}`;
   })();
 
   // helpers
@@ -406,6 +427,27 @@
   const formatJPY=n=>n.toLocaleString('ja-JP',{style:'currency',currency:'JPY',maximumFractionDigits:0});
   const formatPlainJPY=n=>n.toLocaleString('ja-JP',{maximumFractionDigits:0});
   const parsePct=t=>Number(String(t??'').replace('%','').replace(',', '.').trim());
+
+  const countDigits=s=>(s.match(/\d/g)||[]).length;
+  const digitsOnly=s=>(s||'').replace(/[^\d]/g,'');
+  const toHalfWidthDigits=str=>{
+    if(!str) return '';
+    str=str.replace(/[０-９]/g,s=>String.fromCharCode(s.charCodeAt(0)-0xFEE0));
+    const map={'⓪':'0','①':'1','②':'2','③':'3','④':'4','⑤':'5','⑥':'6','⑦':'7','⑧':'8','⑨':'9'};
+    return str.replace(/[⓪①②③④⑤⑥⑦⑧⑨]/g,s=>map[s]||s);
+  };
+  const groupThousands=d=>!d?'':d.replace(/^0+(?=\d)/,'').replace(/\B(?=(\d{3})+(?!\d))/g,',');
+
+  function caretFromDigits(formatted,n){
+    if(n<=0) return 0;
+    let seen=0;
+    for(let i=0;i<formatted.length;i++){
+      const ch=formatted[i];
+      if(ch>='0'&&ch<='9') seen++;
+      if(seen===n) return i+1;
+    }
+    return formatted.length;
+  }
 
   // persist CMR
   function loadCmr(){
@@ -475,25 +517,6 @@
   avgPriceEl.addEventListener('compositionstart',()=>composing=true);
   avgPriceEl.addEventListener('compositionend',()=>{composing=false;updateUnits();});
 
-  const digitsOnly=s=>(s||'').replace(/[^\d]/g,'');
-  const groupThousands=d=>!d?'':d.replace(/^0+(?=\d)/,'').replace(/\B(?=(\d{3})+(?!\d))/g,',');
-  const countDigits=s=>(s.match(/\d/g)||[]).length;
-  const toHalfWidthDigits=str=>{
-    if(!str) return '';
-    str=str.replace(/[０-９]/g,s=>String.fromCharCode(s.charCodeAt(0)-0xFEE0));
-    const map={'⓪':'0','①':'1','②':'2','③':'3','④':'4','⑤':'5','⑥':'6','⑦':'7','⑧':'8','⑨':'9'};
-    return str.replace(/[⓪①②③④⑤⑥⑦⑧⑨]/g,s=>map[s]||s);
-  };
-  function caretFromDigits(formatted,n){
-    if(n<=0) return 0;
-    let seen=0;
-    for(let i=0;i<formatted.length;i++){
-      const ch=formatted[i];
-      if(ch>='0'&&ch<='9') seen++;
-      if(seen===n) return i+1;
-    }
-    return formatted.length;
-  }
   function formatAvgInputRealtime(e){
     if(composing) return;
     const el=e.target, old=String(el.value), caret=el.selectionStart ?? old.length, left=old.slice(0,caret);
@@ -536,7 +559,9 @@
     const rate=pct/100;
     lastSalesNeeded=Math.ceil(spend/rate);
     salesEl.textContent=formatJPY(lastSalesNeeded);
-    statementEl.innerHTML=`<span class="stmt-top">${formatJPY(spend)} の支出は、</span><span class="stmt-bottom">御社の売上 ${formatJPY(lastSalesNeeded)} に相当します。</span>`;
+    statementEl.innerHTML=
+      `<span class="stmt-top">${formatJPY(spend)} の支出は、</span>`+
+      `<span class="stmt-bottom">御社の売上 ${formatJPY(lastSalesNeeded)} に相当します。</span>`;
     resultArea.hidden=false;
     avgRow.hidden=false;
     metrics.hidden=false;
@@ -565,7 +590,10 @@
   $('#copy').addEventListener('click', async ()=>{
     if(resultArea.hidden) return;
     const avgTxt=avgPriceEl.value?`平均単価: ¥${avgPriceEl.value}`:'平均単価: 未入力';
-    const text=`御社の売上相当額: ${salesEl.textContent}\n${statementEl.textContent.replace(/\s+/g,' ')}\n＝ 必要販売数： ${unitsNeededEl.textContent}\n${avgTxt}`;
+    const text=
+      `御社の売上相当額: ${salesEl.textContent}\n`+
+      `${statementEl.textContent.replace(/\s+/g,' ')}\n`+
+      `＝ 必要販売数： ${unitsNeededEl.textContent}\n${avgTxt}`;
     try{
       if(navigator.clipboard?.writeText){
         await navigator.clipboard.writeText(text);
@@ -745,7 +773,7 @@
     cmrInput.value=cmr0.toFixed(1);
   })();
 
-  // ===== 限界利益率 動画モーダル =====
+  // ===== 動画モーダル =====
   const openVideoLink=$('#openCmrVideo');
   const videoModal=$('#videoModal');
   const closeVideoBtn=$('#closeVideo');
@@ -779,10 +807,43 @@
     });
   }
 
+  // ===== 月次決算速報サービス 画像モーダル =====
+  const openMonthlyLink=$('#openMonthlyImg');
+  const imgModal=$('#imgModal');
+  const closeImgBtn=$('#closeImg');
+
+  function openImg(e){
+    e.preventDefault();
+    if(!imgModal) return;
+    imgModal.classList.add('show');
+    document.body.style.overflow='hidden';
+  }
+  function closeImg(){
+    if(!imgModal) return;
+    imgModal.classList.remove('show');
+    document.body.style.overflow='';
+  }
+
+  if(openMonthlyLink){
+    openMonthlyLink.addEventListener('click',openImg);
+  }
+  if(closeImgBtn){
+    closeImgBtn.addEventListener('click',closeImg);
+  }
+  if(imgModal){
+    imgModal.addEventListener('click',e=>{
+      if(e.target===imgModal) closeImg();
+    });
+  }
+
+  // Esc キーでモーダルを閉じる
   document.addEventListener('keydown',e=>{
-    if(e.key==='Escape' && videoModal.classList.contains('show')){
-      e.preventDefault();
-      closeVideo();
+    if(e.key!=='Escape') return;
+    if(videoModal && videoModal.classList.contains('show')){
+      e.preventDefault(); closeVideo(); return;
+    }
+    if(imgModal && imgModal.classList.contains('show')){
+      e.preventDefault(); closeImg(); return;
     }
   });
 </script>
