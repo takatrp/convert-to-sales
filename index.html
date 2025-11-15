@@ -283,7 +283,7 @@
     <!-- ① 支出額 -->
     <div class="field" id="field-spend" data-focus>
       <div class="label-row">
-        <div class="label big">① 支出額（円）</div>
+        <div class="label big">① 今回検討する支出額（円）</div>
         <button id="tutorialBtn" class="tiny-btn" type="button">チュートリアル</button>
       </div>
       <div class="range-row">
@@ -299,8 +299,12 @@
     <div class="field" id="field-cmr" data-focus>
       <div class="label big">② 御社の限界利益率（％）</div>
       <div class="helper">
-        ※<a href="#" id="openCmrVideo" class="inline-link">変動損益計算書</a>
-        もしくは <a href="#" id="openMonthlyImg" class="inline-link">月次決算速報サービス</a> にてご確認ください
+        ※この端末では、前回入力した限界利益率を自動的に保持します。一度「御社の限界利益率」を設定しておくと、毎回の検討がスムーズです。<br>
+        ※限界利益率は、
+        <a href="#" id="openCmrVideo" class="inline-link">変動損益計算書</a>
+        もしくは
+        <a href="#" id="openMonthlyImg" class="inline-link">月次決算速報サービス</a>
+        にてご確認ください
       </div>
       <div class="range-row">
         <input id="cmr" type="range" min="5" max="95" step="0.1" value="43.6" />
@@ -363,7 +367,7 @@
     <a href="https://www.matsumoto-kaikei.or.jp/" target="_blank" rel="noopener license">税理士法人松本会計事務所</a> ｜ 
     <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="license noopener">CC BY-NC-SA 4.0</a> ｜ 
     <a href="/tool-portal/terms.html" target="_blank" rel="noopener">利用条件</a> ｜ 
-    <span id="build-rev">r39</span>（<span id="last-updated-date"></span>）
+    <span id="build-rev">r40</span>（<span id="last-updated-date"></span>）
   </footer>
 </div>
 
