@@ -299,7 +299,7 @@
     <div class="field" id="field-cmr" data-focus>
       <div class="label big">② 御社の限界利益率（％）</div>
       <div class="helper">
-        ※この端末では、前回入力した限界利益率を自動的に保持します。一度「御社の限界利益率」を設定しておくと、毎回の検討がスムーズです。<br>
+        ※毎回の検討がスムーズになるよう、前回入力した限界利益率を端末上で自動的に保持します。<br>
         ※限界利益率は、
         <a href="#" id="openCmrVideo" class="inline-link">変動損益計算書</a>
         もしくは
@@ -367,7 +367,7 @@
     <a href="https://www.matsumoto-kaikei.or.jp/" target="_blank" rel="noopener license">税理士法人松本会計事務所</a> ｜ 
     <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="license noopener">CC BY-NC-SA 4.0</a> ｜ 
     <a href="/tool-portal/terms.html" target="_blank" rel="noopener">利用条件</a> ｜ 
-    <span id="build-rev">r40</span>（<span id="last-updated-date"></span>）
+    <span id="build-rev">r41</span>（<span id="last-updated-date"></span>）
   </footer>
 </div>
 
@@ -788,6 +788,15 @@
     if(!videoModal) return;
     videoModal.classList.add('show');
     document.body.style.overflow='hidden';
+    if(cmrVideo){
+      try{
+        cmrVideo.currentTime = 0;
+        const p = cmrVideo.play();
+        if(p && typeof p.catch === 'function'){
+          p.catch(()=>{ /* autoplay 失敗時は黙って無視 */ });
+        }
+      }catch(_){}
+    }
   }
   function closeVideo(){
     if(!videoModal) return;
