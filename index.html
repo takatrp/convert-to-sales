@@ -9,6 +9,16 @@
 <link rel="apple-touch-icon" href="favicon192192.png" />
 <meta name="theme-color" content="#578899" />
 
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-Q44VCZQEVY"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-Q44VCZQEVY');
+</script>
+
 <style>
   :root{
     --bg:#f4f9fb; --card:#fff; --ink:#1e2a2d; --muted:#5a6a6d;
@@ -415,11 +425,6 @@
 
   const STORAGE_KEY_CMR='cmrPct_v1';
   const DEFAULT_CMR=43.6; // プリセット値
-
-  // ★ 他ツールからの転送で使うキー（送り側と共通利用）
-  const MK_SALES_EFFECT_AMOUNT_KEY='mk_salesEffectAmount';
-  const MK_SALES_EFFECT_SOURCE_KEY='mk_salesEffectSource';
-
   let lastSalesNeeded=0;
 
   // footer date
@@ -780,40 +785,6 @@
     const cmr0=loadCmr();
     cmrRange.value=cmr0.toFixed(1);
     cmrInput.value=cmr0.toFixed(1);
-  })();
-
-  // ★ 他ツールからの試算額転送を受け取って自動計算する処理
-  (function handleExternalEffect(){
-    let effectRaw=null;
-    let source=null;
-    try{
-      effectRaw=localStorage.getItem(MK_SALES_EFFECT_AMOUNT_KEY);
-      source=localStorage.getItem(MK_SALES_EFFECT_SOURCE_KEY);
-      if(effectRaw!==null){
-        localStorage.removeItem(MK_SALES_EFFECT_AMOUNT_KEY);
-        localStorage.removeItem(MK_SALES_EFFECT_SOURCE_KEY);
-      }
-    }catch(_){}
-
-    if(effectRaw===null) return;
-
-    const amount=parseMoney(effectRaw);
-    if(isNaN(amount) || amount<=0) return;
-
-    // 支出欄にセットし、スライダーも追従
-    const min=+spendRange.min;
-    const max=+spendRange.max;
-    const clamped=clamp(amount,min,max);
-
-    spendEl.value=formatPlainJPY(amount);
-    spendRange.value=isNaN(clamped)?spendRange.value:clamped;
-
-    // 自動計算＆スクロール
-    calc();
-    resultArea.scrollIntoView({behavior:'smooth',block:'center'});
-
-    // source は現状UIでは使用しないが、必要ならここで分岐可能
-    // 例: if(source==='jinken'){ ... } など
   })();
 
   // ===== 動画モーダル =====
