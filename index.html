@@ -650,8 +650,19 @@
     lastSalesNeeded=Math.ceil(spend/rate);
     salesEl.textContent=formatJPY(lastSalesNeeded);
 
+    // URLパラメータからコンテキストを取得して主語を決定
+    const urlParams = new URLSearchParams(window.location.search);
+    const source = urlParams.get('source');
+    let subject = "支出";
+
+    if (source === 'jidouka-kouka') {
+      subject = "人件費削減";
+    } else if (source === 'time-unit-cost') {
+      subject = "人件費コスト";
+    }
+
     // Update statement parts individually to preserve structure
-    stmtTop.textContent = `${formatJPY(spend)} の支出は、`;
+    stmtTop.textContent = `${formatJPY(spend)} の${subject}は、`;
     stmtBottom.textContent = `御社の売上 ${formatJPY(lastSalesNeeded)} に相当します。`;
     
     // メッセージ表示ロジック
