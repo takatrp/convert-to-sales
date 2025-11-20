@@ -15,6 +15,7 @@
     --bg:#f4f9fb; --card:#fff; --ink:#1e2a2d; --muted:#5a6a6d;
     --accent:#578899; --accent-2:#7aa2b0; --shadow:0 10px 30px rgba(35,80,90,.12);
     --toast-bg:#fff;
+    --warn: #e74c3c; --success: #27ae60;
   }
   html,body{height:100%}
   body{
@@ -148,10 +149,27 @@
     margin-top:12px;background:#e9f6f8;
     border:1px dashed #7aa2b0;border-radius:12px;
     padding:12px;color:#0f2022;font-weight:900;
-    line-height:1.6;font-size:clamp(16px,4.8vw,22px);
+    line-height:1.6;
+    /* フォントサイズはここで一括管理 */
+    font-size:clamp(16px,4.8vw,22px);
   }
   .statement .stmt-top{display:block}
   .statement .stmt-bottom{display:block;margin-top:4px}
+
+  /* Value Message Styles (Integrated & Simplified) */
+  .value-msg {
+    display: block;
+    margin-top: 12px;
+    color: #1e2a2d; /* 黒文字に統一 */
+    font-weight: 800; /* 視認性のため太字 */
+    opacity: 0;
+    transform: translateY(5px);
+    /* 遅延時間を0.3sから0.8sに変更 */
+    transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.8s; 
+  }
+  .value-msg.show { opacity: 1; transform: translateY(0); }
+  
+  /* 元のレベル別スタイル定義は削除 */
 
   .avgrow{
     margin-top:10px;
@@ -377,8 +395,15 @@
     <div class="result" id="resultArea" hidden data-focus>
       <div class="label big">御社の売上相当額</div>
       <div class="amount" id="sales"></div>
-      <div class="statement" id="statement"></div>
-
+      
+      <!-- 構造変更：statementの中にメッセージを含める -->
+      <div class="statement" id="statement">
+        <span id="stmt-top" class="stmt-top"></span>
+        <span id="stmt-bottom" class="stmt-bottom"></span>
+        <!-- メッセージ用の要素を内部に移動 -->
+        <span id="valueMessage" class="value-msg" aria-live="polite"></span>
+      </div>
+      
       <div class="avgrow" id="avgRow" hidden data-focus>
         <div class="avg-label">平均単価（任意）</div>
         <div class="yen-input small">
@@ -453,6 +478,8 @@
   const cmrRange=$('#cmr'),cmrInput=$('#cmrInput');
   const salesEl=$('#sales'),statementEl=$('#statement');
   const resultArea=$('#resultArea'),actionRow=$('#actionRow');
+  const valueMsgEl=$('#valueMessage'); // Added
+  const stmtTop=$('#stmt-top'), stmtBottom=$('#stmt-bottom'); // Added for granular update
   const avgRow=$('#avgRow'),avgPriceEl=$('#avgPrice'),metrics=$('#metrics'),unitsNeededEl=$('#unitsNeeded');
   const notificationArea = $('#notification-area');
 
@@ -589,6 +616,25 @@
     unitsNeededEl.textContent=(!isNaN(avg)&&avg>0)?(lastSalesNeeded/avg).toFixed(1):'—';
   }
 
+  // Determine Context Message Logic
+  function getContextMessage(salesAmount) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const source = urlParams.get('source');
+    let text = "";
+    
+    if (source === 'jidouka-kouka') {
+      // 自動化（ポジティブ）
+      text = "これだけの売上を作る労力が浮きました";
+    } else if (source === 'time-unit-cost') {
+      // 人件費（成果フォーカス）
+      text = "それに見合う成果は出ていますか？";
+    } else {
+      // 通常（経費、投資判断） - シンプルな問いかけのみ
+      text = "それだけの価値はありますか？";
+    }
+    return { text };
+  }
+
   // calc
   function calc(){
     commitCmrInput();
@@ -607,13 +653,27 @@
     const rate=pct/100;
     lastSalesNeeded=Math.ceil(spend/rate);
     salesEl.textContent=formatJPY(lastSalesNeeded);
-    statementEl.innerHTML=
-      `<span class="stmt-top">${formatJPY(spend)} の支出は、</span>`+
-      `<span class="stmt-bottom">御社の売上 ${formatJPY(lastSalesNeeded)} に相当します。</span>`;
+
+    // Update statement parts individually to preserve structure
+    stmtTop.textContent = `${formatJPY(spend)} の支出は、`;
+    stmtBottom.textContent = `御社の売上 ${formatJPY(lastSalesNeeded)} に相当します。`;
+    
+    // メッセージ表示ロジック
+    const { text } = getContextMessage(lastSalesNeeded);
+    valueMsgEl.textContent = text;
+    valueMsgEl.className = "value-msg"; // Reset classes
+    
     resultArea.hidden=false;
     avgRow.hidden=false;
     metrics.hidden=false;
     actionRow.classList.add('show');
+    
+    // アニメーション発火のために少し遅延
+    valueMsgEl.classList.remove('show');
+    setTimeout(() => {
+        valueMsgEl.classList.add('show');
+    }, 50);
+
     updateUnits();
   }
 
@@ -638,9 +698,11 @@
   $('#copy').addEventListener('click', async ()=>{
     if(resultArea.hidden) return;
     const avgTxt=avgPriceEl.value?`平均単価: ¥${avgPriceEl.value}`:'平均単価: 未入力';
+    const msgTxt = valueMsgEl.textContent.replace('⚠️','').trim(); // アイコン除去
     const text=
       `御社の売上相当額: ${salesEl.textContent}\n`+
-      `${statementEl.textContent.replace(/\s+/g,' ')}\n`+
+      `${stmtTop.textContent} ${stmtBottom.textContent}\n`+
+      `（${msgTxt}）\n` + 
       `＝ 必要販売数： ${unitsNeededEl.textContent}\n${avgTxt}`;
     try{
       if(navigator.clipboard?.writeText){
@@ -673,6 +735,9 @@
     metrics.hidden=true;
     unitsNeededEl.textContent='—';
     actionRow.classList.remove('show');
+    
+    valueMsgEl.classList.remove('show'); // Reset animation
+    
     window.scrollTo({top:0,behavior:'smooth'});
   });
 
@@ -687,7 +752,7 @@
   const tStepNow=$('#coachStepNow'),tStepAll=$('#coachStepAll'),tTitle=$('#coachTitle'),tText=$('#coachText');
 
   const steps=[
-    { el:'#field-spend', title:'支出額（円）',            text:'スライダーか右側の入力欄から支出額を設定します。',              place:'below' },
+    { el:'#field-spend', title:'支出額（円）',            text:'スライダーか右側の入力欄から支出額を設定します。',               place:'below' },
     { el:'#field-cmr',   title:'限界利益率（％）',        text:'御社の限界利益率を入力／調整してください（0.1%刻み）。',        place:'below' },
     { el:'#chips',       title:'産業別の参考値',          text:'不明な場合は業種チップを押すと全国平均が反映されます。',       place:'below' },
     { el:'#calc',        title:'計算',                    text:'次へ を押すと自動で計算を行い、結果を表示します。',              place:'below', onNext:()=>{ if(resultArea.hidden) calc(); } },
