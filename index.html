@@ -50,6 +50,16 @@
   .field{margin:10px 0 16px}
   .label.big{font-size:16px;font-weight:700;color:#324245}
   .label-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 6px 2px}
+  
+  /* 前回入力日のスタイル */
+  .last-date {
+    font-size: 11px;
+    color: #889aa0;
+    font-weight: normal;
+    margin-left: auto; /* 右寄せ */
+    white-space: nowrap;
+  }
+
   .helper{font-size:12px;color:#6a7a7d;margin:4px 2px 0}
   .helper a.inline-link{
     color:#578899;
@@ -171,6 +181,14 @@
     margin-top:10px;
     display:flex;align-items:center;justify-content:space-between;
     gap:10px;
+    flex-wrap: wrap; /* スマホ表示対策 */
+  }
+  .avg-label-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    min-width: 140px;
   }
   .avg-label{font-size:15px;font-weight:700;color:#324245}
   .yen-input.small .money{font-size:16px}
@@ -301,7 +319,7 @@
   }
   .toast.show { transform: translateY(0); opacity: 1; }
   .toast.hide { transform: translateY(-150%); opacity: 0; }
-  
+   
   .toast-icon { flex-shrink: 0; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
   .toast-content { flex: 1; font-size: 13px; font-weight: 700; line-height: 1.5; }
   .toast-close {
@@ -314,7 +332,7 @@
   /* Source specific styles - Adjusted to match base theme */
   .toast.from-jinken { border-left-color: #578899; background: #f4f9fb; }
   .toast.from-jinken .toast-icon { color: #578899; }
-  
+   
   .toast.from-jidouka { border-left-color: #578899; background: #f4f9fb; }
   .toast.from-jidouka .toast-icon { color: #578899; }
 
@@ -353,7 +371,11 @@
 
     <!-- ② 限界利益率 -->
     <div class="field" id="field-cmr" data-focus>
-      <div class="label big">② 御社の限界利益率（％）</div>
+      <div class="label-row">
+        <div class="label big">② 御社の限界利益率（％）</div>
+        <!-- 前回入力日表示エリアを追加 -->
+        <span id="lastDateCmr" class="last-date">前回入力日：ー</span>
+      </div>
       <div class="helper">
         ※毎回の検討がスムーズになるよう、前回入力した限界利益率を端末上で自動的に保持します。<br>
         ※限界利益率は、
@@ -391,7 +413,7 @@
     <div class="result" id="resultArea" hidden data-focus>
       <div class="label big">御社の売上相当額</div>
       <div class="amount" id="sales"></div>
-      
+       
       <!-- 構造変更：statementの中にメッセージを含める -->
       <div class="statement" id="statement">
         <span id="stmt-top" class="stmt-top"></span>
@@ -399,9 +421,13 @@
         <!-- メッセージ用の要素を内部に移動 -->
         <span id="valueMessage" class="value-msg" aria-live="polite"></span>
       </div>
-      
+       
       <div class="avgrow" id="avgRow" hidden data-focus>
-        <div class="avg-label">平均単価（任意）</div>
+        <div class="avg-label-group">
+          <div class="avg-label">平均単価（任意）</div>
+          <!-- 前回入力日表示エリアを追加 -->
+          <span id="lastDateAvg" class="last-date" style="margin-left:0;">前回入力日：ー</span>
+        </div>
         <div class="yen-input small">
           <span class="prefix">¥</span>
           <input id="avgPrice" class="money" type="text" inputmode="numeric" placeholder="例：10,000" autocomplete="off" />
@@ -430,7 +456,7 @@
     <a href="https://www.matsumoto-kaikei.or.jp/" target="_blank" rel="noopener license">税理士法人松本会計事務所</a> ｜ 
     <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="license noopener">CC BY-NC-SA 4.0</a> ｜ 
     <a href="/tool-portal/terms.html" target="_blank" rel="noopener">利用条件</a> ｜ 
-    <span id="build-rev">r43</span>（<span id="last-updated-date"></span>）
+    <span id="build-rev">r44</span>（<span id="last-updated-date"></span>）
   </footer>
 </div>
 
@@ -474,12 +500,20 @@
   const cmrRange=$('#cmr'),cmrInput=$('#cmrInput');
   const salesEl=$('#sales'),statementEl=$('#statement');
   const resultArea=$('#resultArea'),actionRow=$('#actionRow');
-  const valueMsgEl=$('#valueMessage'); // Added
-  const stmtTop=$('#stmt-top'), stmtBottom=$('#stmt-bottom'); // Added for granular update
+  const valueMsgEl=$('#valueMessage'); 
+  const stmtTop=$('#stmt-top'), stmtBottom=$('#stmt-bottom');
   const avgRow=$('#avgRow'),avgPriceEl=$('#avgPrice'),metrics=$('#metrics'),unitsNeededEl=$('#unitsNeeded');
   const notificationArea = $('#notification-area');
+  
+  // 日付表示用Element
+  const lastDateCmr = $('#lastDateCmr');
+  const lastDateAvg = $('#lastDateAvg');
 
   const STORAGE_KEY_CMR='cmrPct_v1';
+  const STORAGE_KEY_AVG_PRICE='avgPrice_v1'; // 平均単価保存用
+  const STORAGE_KEY_DATE_CMR='cmrDate_v1';   // 限界利益率日付
+  const STORAGE_KEY_DATE_AVG='avgDate_v1';   // 平均単価日付
+
   const DEFAULT_CMR=43.6; // プリセット値
 
   let lastSalesNeeded=0;
@@ -519,16 +553,62 @@
     }
     return formatted.length;
   }
+  
+  // Date helper
+  const getTodayStr = () => {
+    const d = new Date();
+    return `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`;
+  };
+  
+  const updateDateLabel = (el, dateStr) => {
+    if (dateStr) {
+      el.textContent = `前回入力日：${dateStr}`;
+    } else {
+      el.textContent = `前回入力日：ー`;
+    }
+  };
 
-  // persist CMR
+  // persist CMR & Date
   function loadCmr(){
     try{
       const v=parsePct(localStorage.getItem(STORAGE_KEY_CMR));
+      const d=localStorage.getItem(STORAGE_KEY_DATE_CMR);
+      updateDateLabel(lastDateCmr, d); // 表示更新
       if(!isNaN(v)) return clamp(v,+cmrRange.min,+cmrRange.max);
     }catch{}
+    updateDateLabel(lastDateCmr, null);
     return DEFAULT_CMR;
   }
-  function saveCmr(v){ try{localStorage.setItem(STORAGE_KEY_CMR, Number(v).toFixed(1));}catch{} }
+  function saveCmr(v){ 
+    try{
+      localStorage.setItem(STORAGE_KEY_CMR, Number(v).toFixed(1));
+      const today = getTodayStr();
+      localStorage.setItem(STORAGE_KEY_DATE_CMR, today);
+      updateDateLabel(lastDateCmr, today);
+    }catch{} 
+  }
+
+  // persist Avg Price & Date
+  function loadAvgPrice(){
+    try{
+      const v=localStorage.getItem(STORAGE_KEY_AVG_PRICE);
+      const d=localStorage.getItem(STORAGE_KEY_DATE_AVG);
+      updateDateLabel(lastDateAvg, d);
+      if(v) {
+        avgPriceEl.value = v;
+      }
+    }catch{}
+  }
+  function saveAvgPrice(){
+    const v = avgPriceEl.value;
+    if(!v) return; // 空の場合は日付更新しない（あるいは削除する？要件次第だが保持する）
+    try{
+      localStorage.setItem(STORAGE_KEY_AVG_PRICE, v);
+      const today = getTodayStr();
+      localStorage.setItem(STORAGE_KEY_DATE_AVG, today);
+      updateDateLabel(lastDateAvg, today);
+    }catch{}
+  }
 
   // inputs sync
   spendRange.addEventListener('input',()=>{
@@ -544,13 +624,24 @@
   const initCmr=loadCmr();
   cmrRange.value=initCmr.toFixed(1);
   cmrInput.value=initCmr.toFixed(1);
+  
+  // 平均単価の読み込み
+  loadAvgPrice();
 
   cmrRange.addEventListener('input',()=>{
     if(document.activeElement!==cmrInput){
       const v=+cmrRange.value;
       cmrInput.value=v.toFixed(1);
-      saveCmr(v);
+      // Range操作中は連続保存を避けるため、changeイベント等で保存しても良いが、
+      // UX向上のためinputで値を同期し、日付更新はinput終了時(change)や特定タイミングで行うのが一般的。
+      // ここでは簡易的に値更新はinputで行い、日付更新は別途saveCmrを呼ぶ形にする。
     }
+  });
+  
+  // Range操作終了時に保存＆日付更新
+  cmrRange.addEventListener('change', () => {
+      const v=+cmrRange.value;
+      saveCmr(v);
   });
 
   function commitCmrInput(){
@@ -562,7 +653,7 @@
     const c=clamp(v,+cmrRange.min,+cmrRange.max);
     cmrRange.value=c.toFixed(1);
     cmrInput.value=c.toFixed(1);
-    saveCmr(c);
+    saveCmr(c); // ここで日付も更新される
   }
   cmrInput.addEventListener('input',()=>{
     const v=parsePct(cmrInput.value);
@@ -578,7 +669,7 @@
       const v=+b.dataset.pct;
       cmrRange.value=v.toFixed(1);
       cmrInput.value=v.toFixed(1);
-      saveCmr(v);
+      saveCmr(v); // 日付更新
       cmrInput.blur();
     });
   });
@@ -602,6 +693,11 @@
     updateUnits();
   }
   avgPriceEl.addEventListener('input', formatAvgInputRealtime);
+  
+  // 平均単価入力完了時に保存＆日付更新
+  avgPriceEl.addEventListener('blur', () => {
+      saveAvgPrice();
+  });
 
   function updateUnits(){
     if(!lastSalesNeeded){
@@ -617,7 +713,7 @@
     const urlParams = new URLSearchParams(window.location.search);
     const source = urlParams.get('source');
     let text = "";
-    
+     
     if (source === 'jidouka-kouka') {
       // 自動化（ポジティブ）
       text = "これだけの売上に匹敵する効果です";
@@ -664,17 +760,17 @@
     // Update statement parts individually to preserve structure
     stmtTop.textContent = `${formatJPY(spend)} の${subject}は、`;
     stmtBottom.textContent = `御社の売上 ${formatJPY(lastSalesNeeded)} に相当します。`;
-    
+     
     // メッセージ表示ロジック
     const { text } = getContextMessage(lastSalesNeeded);
     valueMsgEl.textContent = text;
     valueMsgEl.className = "value-msg"; // Reset classes
-    
+     
     resultArea.hidden=false;
     avgRow.hidden=false;
     metrics.hidden=false;
     actionRow.classList.add('show');
-    
+     
     // アニメーション発火のために少し遅延
     valueMsgEl.classList.remove('show');
     setTimeout(() => {
@@ -732,19 +828,29 @@
   $('#reset').addEventListener('click',()=>{
     spendRange.value=100000;
     spendRange.dispatchEvent(new Event('input'));
-    const cmr0=loadCmr();
+    // リセット時は初期値(loadCmr)に戻すが、日付は保持する仕様にするか、リセットするか。
+    // 通常「入力リセット」なので値を戻す。
+    const cmr0=loadCmr(); // loadCmr内で日付表示も更新される
     cmrRange.value=cmr0.toFixed(1);
     cmrInput.value=cmr0.toFixed(1);
+    
     lastSalesNeeded=0;
+    
+    // 平均単価もクリアするが、localStorageを消すかどうか。
+    // リセットボタンの挙動としては画面クリアが主なので、値はクリアし、ストレージもクリアするのが自然。
     avgPriceEl.value='';
+    localStorage.removeItem(STORAGE_KEY_AVG_PRICE);
+    localStorage.removeItem(STORAGE_KEY_DATE_AVG);
+    updateDateLabel(lastDateAvg, null);
+
     resultArea.hidden=true;
     avgRow.hidden=true;
     metrics.hidden=true;
     unitsNeededEl.textContent='—';
     actionRow.classList.remove('show');
-    
+     
     valueMsgEl.classList.remove('show'); // Reset animation
-    
+     
     window.scrollTo({top:0,behavior:'smooth'});
   });
 
@@ -887,11 +993,8 @@
   window.addEventListener('orientationchange',()=>{ if(coach.classList.contains('show')) setTimeout(layoutCoach,300); });
 
   // 初期値（保存がなければ43.6%）
-  (function initDefaults(){
-    const cmr0=loadCmr();
-    cmrRange.value=cmr0.toFixed(1);
-    cmrInput.value=cmr0.toFixed(1);
-  })();
+  // loadCmrは上で実行済みだが、平均単価ロードも上で実行済み
+  // (function initDefaults(){ ... }) は削除し、上記グローバルスコープでの実行に統合
 
   // ★ 他ツールからの転送処理 (URLパラメータ版)
   window.addEventListener('DOMContentLoaded', () => {
@@ -905,7 +1008,7 @@
       if (!isNaN(val) && val > 0) {
         spendEl.value = formatPlainJPY(val);
         spendRange.value = clamp(val, +spendRange.min, +spendRange.max);
-        
+         
         // 自動計算＆スクロール
         calc();
         resultArea.scrollIntoView({behavior:'smooth',block:'center'});
@@ -951,9 +1054,9 @@
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </button>
     `;
-    
+     
     notificationArea.appendChild(toast);
-    
+     
     // アニメーション開始
     requestAnimationFrame(()=>{
       toast.classList.add('show');
