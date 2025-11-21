@@ -177,20 +177,19 @@
   }
   .value-msg.show { opacity: 1; transform: translateY(0); }
 
-  .avgrow{
-    margin-top:10px;
-    display:flex;align-items:center;justify-content:space-between;
-    gap:10px;
-    flex-wrap: wrap; /* スマホ表示対策 */
-  }
-  .avg-label-group {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex: 1;
-    min-width: 140px;
+  /* 平均単価エリアの修正スタイル */
+  .avgrow-container {
+    margin-top: 16px;
+    display: block; /* フレックスではなくブロックにして上下に積む */
   }
   .avg-label{font-size:15px;font-weight:700;color:#324245}
+  
+  .input-row-right {
+    display: flex;
+    justify-content: flex-end; /* 入力欄を右寄せ */
+    margin-top: 6px;
+  }
+  
   .yen-input.small .money{font-size:16px}
   .yen-input.small input::placeholder{
     color:#7f8d91;opacity:.55;font-weight:500;
@@ -373,7 +372,7 @@
     <div class="field" id="field-cmr" data-focus>
       <div class="label-row">
         <div class="label big">② 御社の限界利益率（％）</div>
-        <!-- 前回入力日表示エリアを追加 -->
+        <!-- 前回入力日表示エリア -->
         <span id="lastDateCmr" class="last-date">前回入力日：ー</span>
       </div>
       <div class="helper">
@@ -422,15 +421,19 @@
         <span id="valueMessage" class="value-msg" aria-live="polite"></span>
       </div>
        
-      <div class="avgrow" id="avgRow" hidden data-focus>
-        <div class="avg-label-group">
+      <!-- 平均単価エリア修正：2行構成に変更 -->
+      <div class="avgrow-container" id="avgRow" hidden data-focus>
+        <!-- 1行目：ラベルと日付（左右分割） -->
+        <div class="label-row" style="margin-bottom:0;">
           <div class="avg-label">平均単価（任意）</div>
-          <!-- 前回入力日表示エリアを追加 -->
-          <span id="lastDateAvg" class="last-date" style="margin-left:0;">前回入力日：ー</span>
+          <span id="lastDateAvg" class="last-date">前回入力日：ー</span>
         </div>
-        <div class="yen-input small">
-          <span class="prefix">¥</span>
-          <input id="avgPrice" class="money" type="text" inputmode="numeric" placeholder="例：10,000" autocomplete="off" />
+        <!-- 2行目：入力欄（右寄せ） -->
+        <div class="input-row-right">
+          <div class="yen-input small">
+            <span class="prefix">¥</span>
+            <input id="avgPrice" class="money" type="text" inputmode="numeric" placeholder="例：10,000" autocomplete="off" />
+          </div>
         </div>
       </div>
 
@@ -456,7 +459,7 @@
     <a href="https://www.matsumoto-kaikei.or.jp/" target="_blank" rel="noopener license">税理士法人松本会計事務所</a> ｜ 
     <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="license noopener">CC BY-NC-SA 4.0</a> ｜ 
     <a href="/tool-portal/terms.html" target="_blank" rel="noopener">利用条件</a> ｜ 
-    <span id="build-rev">r44</span>（<span id="last-updated-date"></span>）
+    <span id="build-rev">r45</span>（<span id="last-updated-date"></span>）
   </footer>
 </div>
 
@@ -601,7 +604,7 @@
   }
   function saveAvgPrice(){
     const v = avgPriceEl.value;
-    if(!v) return; // 空の場合は日付更新しない（あるいは削除する？要件次第だが保持する）
+    if(!v) return; // 空の場合は日付更新しない
     try{
       localStorage.setItem(STORAGE_KEY_AVG_PRICE, v);
       const today = getTodayStr();
@@ -632,9 +635,6 @@
     if(document.activeElement!==cmrInput){
       const v=+cmrRange.value;
       cmrInput.value=v.toFixed(1);
-      // Range操作中は連続保存を避けるため、changeイベント等で保存しても良いが、
-      // UX向上のためinputで値を同期し、日付更新はinput終了時(change)や特定タイミングで行うのが一般的。
-      // ここでは簡易的に値更新はinputで行い、日付更新は別途saveCmrを呼ぶ形にする。
     }
   });
   
@@ -828,16 +828,14 @@
   $('#reset').addEventListener('click',()=>{
     spendRange.value=100000;
     spendRange.dispatchEvent(new Event('input'));
-    // リセット時は初期値(loadCmr)に戻すが、日付は保持する仕様にするか、リセットするか。
-    // 通常「入力リセット」なので値を戻す。
-    const cmr0=loadCmr(); // loadCmr内で日付表示も更新される
+    
+    const cmr0=loadCmr(); 
     cmrRange.value=cmr0.toFixed(1);
     cmrInput.value=cmr0.toFixed(1);
     
     lastSalesNeeded=0;
     
-    // 平均単価もクリアするが、localStorageを消すかどうか。
-    // リセットボタンの挙動としては画面クリアが主なので、値はクリアし、ストレージもクリアするのが自然。
+    // 平均単価リセット（localStorageも消去）
     avgPriceEl.value='';
     localStorage.removeItem(STORAGE_KEY_AVG_PRICE);
     localStorage.removeItem(STORAGE_KEY_DATE_AVG);
@@ -849,7 +847,7 @@
     unitsNeededEl.textContent='—';
     actionRow.classList.remove('show');
      
-    valueMsgEl.classList.remove('show'); // Reset animation
+    valueMsgEl.classList.remove('show'); 
      
     window.scrollTo({top:0,behavior:'smooth'});
   });
@@ -991,10 +989,6 @@
 
   window.addEventListener('resize',()=>{ if(coach.classList.contains('show')) layoutCoach(); });
   window.addEventListener('orientationchange',()=>{ if(coach.classList.contains('show')) setTimeout(layoutCoach,300); });
-
-  // 初期値（保存がなければ43.6%）
-  // loadCmrは上で実行済みだが、平均単価ロードも上で実行済み
-  // (function initDefaults(){ ... }) は削除し、上記グローバルスコープでの実行に統合
 
   // ★ 他ツールからの転送処理 (URLパラメータ版)
   window.addEventListener('DOMContentLoaded', () => {
