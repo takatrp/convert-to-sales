@@ -292,6 +292,7 @@
   .video-close{
     position:absolute;
     top:8px;right:8px;
+    z-index:10; /* ← z-indexを追加してクリック可能に修正 */
     width:32px;height:32px;
     border-radius:999px;border:none;
     background:rgba(0,0,0,.6);
@@ -906,7 +907,7 @@
     }
     card.style.top=finalTop+'px';
     card.style.left='50%';
-    card.style.transform='translateX(-50%)';
+    card.style.transform='translateX(-50%);';
   }
 
   function ensureSeparation(){
