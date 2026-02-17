@@ -8,7 +8,13 @@
 <link rel="icon" href="favicon192192.png" sizes="192x192" />
 <link rel="apple-touch-icon" href="favicon192192.png" />
 <meta name="theme-color" content="#578899" />
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-Q44VCZQEVY"></script> <script> window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-Q44VCZQEVY'); </script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-Q44VCZQEVY"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-Q44VCZQEVY');
+</script>
 
 <style>
   :root{
@@ -139,6 +145,16 @@
     background:#eef7f8;color:#578899;
     box-shadow:none;border:1px solid #d9eaed;
   }
+
+  /* ▼ 追加：次のステップ用（トーンを合わせたCTA） */
+  .btn.next-step{
+    background: linear-gradient(180deg, #4f7988, #4b7685);
+    box-shadow: 0 8px 20px rgba(35,80,90,.16);
+  }
+  .btn.next-step:hover{ filter: brightness(1.03); }
+  .btn.next-step:active{ filter: brightness(0.98); }
+  /* ▲ 追加ここまで */
+
   .tiny-btn{
     background:#eef7f8;color:#578899;border:1px solid #d9eaed;
     border-radius:999px;font-size:12px;padding:6px 10px;
@@ -436,9 +452,11 @@
 
       <div style="margin-top:20px; padding-top:20px; border-top:1px dashed #d9eaed;">
         <div style="font-size:13px; font-weight:700; color:#578899; margin-bottom:8px;">次のステップ</div>
-        <button id="btnToSaleKit" class="btn" type="button" style="background:linear-gradient(135deg, #eb9436, #f39c12); box-shadow:0 8px 20px rgba(235, 148, 54, 0.25);">
+        <!-- ▼ 修正：インラインstyleを除去し、トーンを合わせたCTAクラスを適用 -->
+        <button id="btnToSaleKit" class="btn next-step" type="button">
           回収するための「打ち手」を検討する ➡
         </button>
+        <!-- ▲ 修正ここまで -->
       </div>
       <div class="note">
         ※ 計算式：<b>御社の売上相当額 ＝ 支出額 ÷（限界利益率 / 100）</b><br>
@@ -1171,7 +1189,8 @@
     }
   });
 </script>
-  <style>
+
+<style>
 :root{ --mk-brand:#578899; --mk-line:#e2e8f0; --mk-ink:#0f172a; --mk-muted:#64748b; }
 .mk-nav{position:fixed; left:0; right:0; bottom:0; z-index:999; padding:10px 12px calc(10px + env(safe-area-inset-bottom)); background:rgba(255,255,255,.92); border-top:1px solid var(--mk-line); backdrop-filter:saturate(180%) blur(10px);}
 .mk-nav .inner{max-width:1100px; margin:0 auto; display:flex; gap:10px; align-items:center; justify-content:space-between;}
@@ -1187,55 +1206,48 @@
 body{ padding-bottom: calc(62px + env(safe-area-inset-bottom)); }
 </style>
 
-
 <div class="mk-nav" id="mk-nav" hidden>
-<div class="inner">
-<div class="left">
-<div style="font-weight:900;">松本会計ツール</div>
-<div class="hint" id="mk-hint">ポータルへ戻る／次のおすすめへ</div>
+  <div class="inner">
+    <div class="left">
+      <div style="font-weight:900;">松本会計ツール</div>
+      <div class="hint" id="mk-hint">ポータルへ戻る／次のおすすめへ</div>
+    </div>
+    <div class="btns">
+      <a href="https://takatrp.github.io/tool-portal/" id="mk-back">← ポータル</a>
+      <a href="#" id="mk-next" class="primary" hidden>次へ →</a>
+    </div>
+  </div>
 </div>
-<div class="btns">
-<a href="https://takatrp.github.io/tool-portal/" id="mk-back">← ポータル</a>
-<a href="#" id="mk-next" class="primary" hidden>次へ →</a>
-</div>
-</div>
-</div>
-
 
 <script>
 (function(){
-const params = new URLSearchParams(location.search);
-const portal = params.get('portal') || (function(){ try{return localStorage.getItem('mk_portal_url');}catch(e){return null;} })() || 'https://takatrp.github.io/tool-portal/';
-const next = params.get('next');
+  const params = new URLSearchParams(location.search);
+  const portal = params.get('portal') || (function(){ try{return localStorage.getItem('mk_portal_url');}catch(e){return null;} })() || 'https://takatrp.github.io/tool-portal/';
+  const next = params.get('next');
 
+  const nav = document.getElementById('mk-nav');
+  const back = document.getElementById('mk-back');
+  const nextBtn = document.getElementById('mk-next');
 
-const nav = document.getElementById('mk-nav');
-const back = document.getElementById('mk-back');
-const nextBtn = document.getElementById('mk-next');
+  if(back) back.href = portal;
 
+  if(next){
+    try{
+      // nextはURLとして来る想定。安全のため同一ドメイン以外は非表示
+      const u = new URL(next);
+      if(u.hostname.endsWith('github.io')){
+        nextBtn.href = next;
+        nextBtn.hidden = false;
+      }
+    }catch(e){}
+  }
 
-if(back) back.href = portal;
+  // 保存（次回の保険）
+  try{ localStorage.setItem('mk_portal_url', portal); }catch(e){}
 
-
-if(next){
-try{
-// nextはURLとして来る想定。安全のため同一ドメイン以外は非表示
-const u = new URL(next);
-if(u.hostname.endsWith('github.io')){
-nextBtn.href = next;
-nextBtn.hidden = false;
-}
-}catch(e){}
-}
-
-
-// 保存（次回の保険）
-try{ localStorage.setItem('mk_portal_url', portal); }catch(e){}
-
-
-if(nav) nav.hidden = false;
+  if(nav) nav.hidden = false;
 })();
 </script>
-  <script src="https://takatrp.github.io/tool-portal/mk-nav.js" defer></script>
+<script src="https://takatrp.github.io/tool-portal/mk-nav.js" defer></script>
 </body>
 </html>
