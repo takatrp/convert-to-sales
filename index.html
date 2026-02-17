@@ -8,7 +8,7 @@
 <link rel="icon" href="favicon192192.png" sizes="192x192" />
 <link rel="apple-touch-icon" href="favicon192192.png" />
 <meta name="theme-color" content="#578899" />
-<!-- Google tag (gtag.js) --> <script async src="https://www.googletagmanager.com/gtag/js?id=G-Q44VCZQEVY"></script> <script> window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-Q44VCZQEVY'); </script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-Q44VCZQEVY"></script> <script> window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-Q44VCZQEVY'); </script>
 
 <style>
   :root{
@@ -131,6 +131,8 @@
     color:#fff;font-weight:900;border:0;width:100%;
     border-radius:12px;padding:16px 18px;font-size:17px;
     box-shadow:0 10px 30px rgba(35,80,90,.12);
+    cursor: pointer;
+    transition: transform 0.1s;
   }
   .btn:active{transform:translateY(1px)}
   .btn.secondary{
@@ -319,7 +321,7 @@
   }
   .toast.show { transform: translateY(0); opacity: 1; }
   .toast.hide { transform: translateY(-150%); opacity: 0; }
-   
+    
   .toast-icon { flex-shrink: 0; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
   .toast-content { flex: 1; font-size: 13px; font-weight: 700; line-height: 1.5; }
   .toast-close {
@@ -332,14 +334,13 @@
   /* Source specific styles - Adjusted to match base theme */
   .toast.from-jinken { border-left-color: #578899; background: #f4f9fb; }
   .toast.from-jinken .toast-icon { color: #578899; }
-   
+    
   .toast.from-jidouka { border-left-color: #578899; background: #f4f9fb; }
   .toast.from-jidouka .toast-icon { color: #578899; }
 
 </style>
 </head>
 <body>
-<!-- Notification Area -->
 <div id="notification-area"></div>
 
 <div class="wrap">
@@ -354,7 +355,6 @@
   </header>
 
   <section class="card" aria-label="入力">
-    <!-- ① 支出額 -->
     <div class="field" id="field-spend" data-focus>
       <div class="label-row">
         <div class="label big">① 今回検討する支出額（円）</div>
@@ -369,11 +369,9 @@
       </div>
     </div>
 
-    <!-- ② 限界利益率 -->
     <div class="field" id="field-cmr" data-focus>
       <div class="label-row">
         <div class="label big">② 御社の限界利益率（％）</div>
-        <!-- 前回入力日表示エリア -->
         <span id="lastDateCmr" class="last-date">前回入力日：ー</span>
       </div>
       <div class="helper">
@@ -409,27 +407,21 @@
       <button id="calc" class="btn" type="button" data-focus>御社の売上相当額を計算</button>
     </div>
 
-    <!-- 結果表示 -->
     <div class="result" id="resultArea" hidden data-focus>
       <div class="label big">御社の売上相当額</div>
       <div class="amount" id="sales"></div>
-       
-      <!-- 構造変更：statementの中にメッセージを含める -->
+        
       <div class="statement" id="statement">
         <span id="stmt-top" class="stmt-top"></span>
         <span id="stmt-bottom" class="stmt-bottom"></span>
-        <!-- メッセージ用の要素を内部に移動 -->
         <span id="valueMessage" class="value-msg" aria-live="polite"></span>
       </div>
-       
-      <!-- 平均単価エリア修正：2行構成に変更 -->
+        
       <div class="avgrow-container" id="avgRow" hidden data-focus>
-        <!-- 1行目：ラベルと日付（左右分割） -->
         <div class="label-row" style="margin-bottom:0;">
           <div class="avg-label">平均単価（任意）</div>
           <span id="lastDateAvg" class="last-date">前回入力日：ー</span>
         </div>
-        <!-- 2行目：入力欄（右寄せ） -->
         <div class="input-row-right">
           <div class="yen-input small">
             <span class="prefix">¥</span>
@@ -442,6 +434,12 @@
         <div class="only">＝ 必要販売数： <b id="unitsNeeded">—</b></div>
       </div>
 
+      <div style="margin-top:20px; padding-top:20px; border-top:1px dashed #d9eaed;">
+        <div style="font-size:13px; font-weight:700; color:#578899; margin-bottom:8px;">次のステップ</div>
+        <button id="btnToSaleKit" class="btn" type="button" style="background:linear-gradient(135deg, #eb9436, #f39c12); box-shadow:0 8px 20px rgba(235, 148, 54, 0.25);">
+          回収するための「打ち手」を検討する ➡
+        </button>
+      </div>
       <div class="note">
         ※ 計算式：<b>御社の売上相当額 ＝ 支出額 ÷（限界利益率 / 100）</b><br>
         ※各産業平均は令和7年版TKC経営指標（BAST）を参照しています。
@@ -460,11 +458,10 @@
     <a href="https://www.matsumoto-kaikei.or.jp/" target="_blank" rel="noopener license">税理士法人松本会計事務所</a> ｜ 
     <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="license noopener">CC BY-NC-SA 4.0</a> ｜ 
     <a href="/tool-portal/terms.html" target="_blank" rel="noopener">利用条件</a> ｜ 
-    <span id="build-rev">r45</span>（<span id="last-updated-date"></span>）
+    <span id="build-rev">r46</span>（<span id="last-updated-date"></span>）
   </footer>
 </div>
 
-<!-- 限界利益率の確認方法（FXC）動画モーダル -->
 <div id="videoModal" class="video-modal" aria-hidden="true">
   <div class="video-dialog" role="dialog" aria-label="限界利益率の確認方法（FXC）の動画">
     <button type="button" class="video-close" id="closeVideo" aria-label="閉じる">×</button>
@@ -475,7 +472,6 @@
   </div>
 </div>
 
-<!-- 月次決算速報サービス画像モーダル -->
 <div id="imgModal" class="image-modal" aria-hidden="true">
   <div class="image-dialog" role="dialog" aria-label="限界利益率の確認方法（月次決算速報サービス）の画像">
     <button type="button" class="video-close" id="closeImg" aria-label="閉じる">×</button>
@@ -483,7 +479,6 @@
   </div>
 </div>
 
-<!-- Tutorial -->
 <div id="coach" class="coach-overlay" aria-hidden="true">
   <div id="coachSpot" class="coach-spot" aria-hidden="true"></div>
   <div id="coachCard" class="coach-card" role="dialog" aria-modal="true" aria-live="polite">
@@ -714,7 +709,7 @@
     const urlParams = new URLSearchParams(window.location.search);
     const source = urlParams.get('source');
     let text = "";
-     
+      
     if (source === 'jidouka-kouka') {
       // 自動化（ポジティブ）
       text = "これだけの売上に匹敵する効果です";
@@ -761,17 +756,17 @@
     // Update statement parts individually to preserve structure
     stmtTop.textContent = `${formatJPY(spend)} の${subject}は、`;
     stmtBottom.textContent = `御社の売上 ${formatJPY(lastSalesNeeded)} に相当します。`;
-     
+      
     // メッセージ表示ロジック
     const { text } = getContextMessage(lastSalesNeeded);
     valueMsgEl.textContent = text;
     valueMsgEl.className = "value-msg"; // Reset classes
-     
+      
     resultArea.hidden=false;
     avgRow.hidden=false;
     metrics.hidden=false;
     actionRow.classList.add('show');
-     
+      
     // アニメーション発火のために少し遅延
     valueMsgEl.classList.remove('show');
     setTimeout(() => {
@@ -797,6 +792,22 @@
       calc();
     }
   });
+
+  // ▼ 追加: 打ち手検討ツールへ遷移
+  $('#btnToSaleKit').addEventListener('click', ()=>{
+    const spendVal = digitsOnly(spendEl.value);
+    const cmrVal = cmrInput.value;
+
+    if(!spendVal || !cmrVal){
+      alert('数値を入力してから押してください。');
+      return;
+    }
+
+    // sale-kitへパラメータを渡す (mode=monthlyをデフォルトと仮定)
+    const url = `https://takatrp.github.io/sale-kit/?mode=monthly&spend=${spendVal}&cmr=${cmrVal}`;
+    window.open(url, '_blank');
+  });
+  // ▲ 追加ここまで
 
   // copy/reset/print
   $('#copy').addEventListener('click', async ()=>{
@@ -847,9 +858,9 @@
     metrics.hidden=true;
     unitsNeededEl.textContent='—';
     actionRow.classList.remove('show');
-     
+      
     valueMsgEl.classList.remove('show'); 
-     
+      
     window.scrollTo({top:0,behavior:'smooth'});
   });
 
@@ -864,7 +875,7 @@
   const tStepNow=$('#coachStepNow'),tStepAll=$('#coachStepAll'),tTitle=$('#coachTitle'),tText=$('#coachText');
 
   const steps=[
-    { el:'#field-spend', title:'支出額（円）',            text:'スライダーか右側の入力欄から支出額を設定します。',               place:'below' },
+    { el:'#field-spend', title:'支出額（円）',            text:'スライダーか右側の入力欄から支出額を設定します。',                place:'below' },
     { el:'#field-cmr',   title:'限界利益率（％）',        text:'御社の限界利益率を入力／調整してください（0.1%刻み）。',        place:'below' },
     { el:'#chips',       title:'産業別の参考値',          text:'不明な場合は業種チップを押すと全国平均が反映されます。',       place:'below' },
     { el:'#calc',        title:'計算',                    text:'次へ を押すと自動で計算を行い、結果を表示します。',              place:'below', onNext:()=>{ if(resultArea.hidden) calc(); } },
@@ -1003,7 +1014,7 @@
       if (!isNaN(val) && val > 0) {
         spendEl.value = formatPlainJPY(val);
         spendRange.value = clamp(val, +spendRange.min, +spendRange.max);
-         
+          
         // 自動計算＆スクロール
         calc();
         resultArea.scrollIntoView({behavior:'smooth',block:'center'});
@@ -1049,9 +1060,9 @@
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </button>
     `;
-     
+      
     notificationArea.appendChild(toast);
-     
+      
     // アニメーション開始
     requestAnimationFrame(()=>{
       toast.classList.add('show');
