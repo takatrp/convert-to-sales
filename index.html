@@ -458,7 +458,7 @@
     <a href="https://www.matsumoto-kaikei.or.jp/" target="_blank" rel="noopener license">税理士法人松本会計事務所</a> ｜ 
     <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="license noopener">CC BY-NC-SA 4.0</a> ｜ 
     <a href="/tool-portal/terms.html" target="_blank" rel="noopener">利用条件</a> ｜ 
-    <span id="build-rev">r46</span>（<span id="last-updated-date"></span>）
+    <span id="build-rev">r47</span>（<span id="last-updated-date"></span>）
   </footer>
 </div>
 
@@ -797,14 +797,23 @@
   $('#btnToSaleKit').addEventListener('click', ()=>{
     const spendVal = digitsOnly(spendEl.value);
     const cmrVal = cmrInput.value;
+    const avgVal = digitsOnly(avgPriceEl.value); // 平均単価も取得
 
     if(!spendVal || !cmrVal){
       alert('数値を入力してから押してください。');
       return;
     }
 
-    // sale-kitへパラメータを渡す (mode=monthlyをデフォルトと仮定)
-    const url = `https://takatrp.github.io/sale-kit/?mode=monthly&spend=${spendVal}&cmr=${cmrVal}`;
+    // sale-kitへパラメータを渡す
+    // 本番用URL
+    let url = `https://takatrp.github.io/sale-kit/?mode=monthly&spend=${spendVal}&cmr=${cmrVal}`;
+    // ローカルテスト用（コメントアウト解除して使用）
+    // let url = `sale-kit.html?mode=monthly&spend=${spendVal}&cmr=${cmrVal}`;
+
+    if(avgVal){
+      url += `&unit_price=${avgVal}`;
+    }
+
     window.open(url, '_blank');
   });
   // ▲ 追加ここまで
@@ -1031,8 +1040,8 @@
     let msg = '';
     let theme = '';
     // SVGアイコンの定義
-    const iconTime = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
-    const iconRobot = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>`;
+    const iconTime = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
+    const iconRobot = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>`;
     let icon = '';
 
     if(source === 'time-unit-cost'){
