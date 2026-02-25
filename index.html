@@ -327,46 +327,38 @@
     cursor:pointer;
   }
 
-  /* Notification Toast */
-  #notification-area {
-    position: fixed; top: 20px; left: 0; right: 0;
-    z-index: 20000; pointer-events: none;
-    display: flex; justify-content: center;
+  /* 転記トースト（打ち手検討ツールと同じ出方） */
+  .import-toast{
+    position:fixed;
+    left:50%;
+    top:74px;
+    transform:translateX(-50%) translateY(-8px);
+    z-index:120;
+    padding:10px 12px;
+    border-radius:999px;
+    border:1px solid rgba(87,136,153,.35);
+    background:#fff;
+    box-shadow:0 12px 30px rgba(20,40,50,.12);
+    font-size:13px;
+    font-weight:900;
+    color:#1e2a2d;
+    opacity:0;
+    pointer-events:none;
+    transition:.18s transform,.18s opacity;
+    max-width:min(92vw,560px);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
   }
-  .toast {
-    pointer-events: auto;
-    display: flex; align-items: center; gap: 12px;
-    background: #fff; color: #1e2a2d;
-    padding: 14px 18px; border-radius: 12px;
-    box-shadow: 0 12px 36px rgba(0,0,0,0.18);
-    max-width: 90%; width: 340px;
-    border-left: 5px solid transparent;
-    transform: translateY(-150%); opacity: 0;
-    transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  .import-toast.show{
+    opacity:1;
+    transform:translateX(-50%) translateY(0);
   }
-  .toast.show { transform: translateY(0); opacity: 1; }
-  .toast.hide { transform: translateY(-150%); opacity: 0; }
-    
-  .toast-icon { flex-shrink: 0; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
-  .toast-content { flex: 1; font-size: 13px; font-weight: 700; line-height: 1.5; }
-  .toast-close {
-    background: transparent; border: none; color: #9ca8ab; cursor: pointer;
-    padding: 4px; margin-right: -4px; display: flex; align-items: center;
-  }
-  .toast-close svg { width: 16px; height: 16px; fill: currentColor; }
-  .toast-close:hover { color: #578899; }
-
-  /* Source specific styles - Adjusted to match base theme */
-  .toast.from-jinken { border-left-color: #578899; background: #f4f9fb; }
-  .toast.from-jinken .toast-icon { color: #578899; }
-    
-  .toast.from-jidouka { border-left-color: #578899; background: #f4f9fb; }
-  .toast.from-jidouka .toast-icon { color: #578899; }
 
 </style>
 </head>
 <body>
-<div id="notification-area"></div>
+<div class="import-toast" id="importToast" role="status" aria-live="polite">数字を転記しました</div>
 
 <div class="wrap">
   <header>
@@ -529,7 +521,7 @@
   const valueMsgEl=$('#valueMessage'); 
   const stmtTop=$('#stmt-top'), stmtBottom=$('#stmt-bottom');
   const avgRow=$('#avgRow'),avgPriceEl=$('#avgPrice'),metrics=$('#metrics'),unitsNeededEl=$('#unitsNeeded');
-  const notificationArea = $('#notification-area');
+  const importToastEl = $('#importToast');
   
   // 日付表示用Element
   const lastDateCmr = $('#lastDateCmr');
@@ -1083,28 +1075,19 @@
   });
 
   function showSourceToast(source){
-    let msg = '';
-    let theme = '';
-    // SVGアイコンの定義
-    const iconTime = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
-    const iconRobot = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>`;
-    let icon = '';
-
-    if(source === 'time-unit-cost'){
-      msg = '「人件費見える化ツール」から<br>数値を転記しました';
-      theme = 'from-jinken';
-      icon = iconTime;
-    } else if(source === 'jidouka-kouka'){
-      msg = '「自動化効果試算ツール」から<br>数値を転記しました';
-      theme = 'from-jidouka';
-      icon = iconRobot;
-    }
-
-    if(msg){
-      showNotification(msg, icon, theme);
+    if(source === 'time-unit-cost' || source === 'jidouka-kouka'){
+      showImportToast('数字を転記しました');
     }
   }
 
+  function showImportToast(msg='数字を転記しました'){
+    if(!importToastEl) return;
+    importToastEl.textContent=msg;
+    importToastEl.classList.add('show');
+    clearTimeout(showImportToast._timer);
+    showImportToast._timer=setTimeout(()=>{
+      importToastEl.classList.remove('show');
+    },2200);
   function highlightSyncedFields(selectors) {
     const uniq = [...new Set(selectors)];
     uniq.forEach((selector) => {
@@ -1143,7 +1126,6 @@
       }
     }, 5000);
   }
-
 
   // ===== 動画モーダル =====
   const openVideoLink=$('#openCmrVideo');
