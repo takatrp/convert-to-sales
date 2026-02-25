@@ -1088,6 +1088,43 @@
     showImportToast._timer=setTimeout(()=>{
       importToastEl.classList.remove('show');
     },2200);
+  function highlightSyncedFields(selectors) {
+    const uniq = [...new Set(selectors)];
+    uniq.forEach((selector) => {
+      const inputWrapper = document.querySelector(selector);
+      if (!inputWrapper) return;
+      inputWrapper.classList.add('synced');
+      const parentField = inputWrapper.closest('.field');
+      if (parentField) parentField.classList.add('synced');
+    });
+  }
+
+  function showNotification(html, iconSvg, themeClass){
+    const toast = document.createElement('div');
+    toast.className = `toast ${themeClass}`;
+    toast.innerHTML = `
+      <div class="toast-icon">${iconSvg}</div>
+      <div class="toast-content">${html}</div>
+      <button class="toast-close" onclick="this.parentElement.classList.add('hide');setTimeout(()=>this.parentElement.remove(),500)">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    `;
+      
+    notificationArea.appendChild(toast);
+      
+    // アニメーション開始
+    requestAnimationFrame(()=>{
+      toast.classList.add('show');
+    });
+
+    // 自動で消える
+    setTimeout(()=>{
+      if(toast.parentNode){
+        toast.classList.remove('show');
+        toast.classList.add('hide');
+        setTimeout(()=>toast.remove(), 500);
+      }
+    }, 5000);
   }
 
   // ===== 動画モーダル =====
