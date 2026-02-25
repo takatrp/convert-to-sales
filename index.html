@@ -96,7 +96,16 @@
     display:flex;align-items:center;gap:8px;
     background:#f8fcfd;border:1px solid #d9eaed;
     border-radius:12px;padding:8px 10px;
+    transition:background-color .28s ease,border-color .28s ease,box-shadow .28s ease;
   }
+  .yen-input.synced,.pctbox.synced{
+    background:#fef9e7;
+    border-color:#f2b632;
+    box-shadow:0 0 0 1px rgba(242,182,50,.18);
+  }
+  .field.synced .label.big{color:#925f00}
+  .yen-input.synced input.money,
+  .pctbox.synced input.pct{color:#b42318}
   .yen-input .prefix{
     font-weight:700;color:#578899;
     border-right:1px solid #e6f1f3;
@@ -1032,8 +1041,10 @@
   // ★ 他ツールからの転送処理 (URLパラメータ版)
   window.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
-    const amount = urlParams.get('amount');
+    const amount = urlParams.get('amount') || urlParams.get('spend');
+    const cmrFromParam = urlParams.get('cmr');
     const source = urlParams.get('source');
+    const syncedInputClasses = [];
 
     // 1. 金額があればセットして計算
     if (amount) {
@@ -1041,11 +1052,28 @@
       if (!isNaN(val) && val > 0) {
         spendEl.value = formatPlainJPY(val);
         spendRange.value = clamp(val, +spendRange.min, +spendRange.max);
+        syncedInputClasses.push('#field-spend .yen-input');
           
-        // 自動計算＆スクロール
-        calc();
-        resultArea.scrollIntoView({behavior:'smooth',block:'center'});
       }
+    }
+
+    // 1-2. 限界利益率があればセット
+    if (cmrFromParam) {
+      const pct = parseFloat(cmrFromParam);
+      if (!isNaN(pct) && pct > 0) {
+        const fixedPct = Number(clamp(pct, +cmrRange.min, +cmrRange.max).toFixed(1));
+        cmrRange.value = fixedPct;
+        cmrInput.value = fixedPct;
+        syncedInputClasses.push('#field-cmr .pctbox');
+      }
+    }
+
+    if (syncedInputClasses.length) {
+      highlightSyncedFields(syncedInputClasses);
+
+      // 自動計算＆スクロール
+      calc();
+      resultArea.scrollIntoView({behavior:'smooth',block:'center'});
     }
 
     // 2. ソースがあれば通知を表示
@@ -1075,6 +1103,17 @@
     if(msg){
       showNotification(msg, icon, theme);
     }
+  }
+
+  function highlightSyncedFields(selectors) {
+    const uniq = [...new Set(selectors)];
+    uniq.forEach((selector) => {
+      const inputWrapper = document.querySelector(selector);
+      if (!inputWrapper) return;
+      inputWrapper.classList.add('synced');
+      const parentField = inputWrapper.closest('.field');
+      if (parentField) parentField.classList.add('synced');
+    });
   }
 
   function showNotification(html, iconSvg, themeClass){
