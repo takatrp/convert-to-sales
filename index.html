@@ -155,12 +155,14 @@
     box-shadow:none;border:1px solid #d9eaed;
   }
 
+  /* ▼ 追加：次のステップ用（トーンを合わせたCTA） */
   .btn.next-step{
     background: linear-gradient(180deg, #4f7988, #4b7685);
     box-shadow: 0 8px 20px rgba(35,80,90,.16);
   }
   .btn.next-step:hover{ filter: brightness(1.03); }
   .btn.next-step:active{ filter: brightness(0.98); }
+  /* ▲ 追加ここまで */
 
   .tiny-btn{
     background:#eef7f8;color:#578899;border:1px solid #d9eaed;
@@ -317,7 +319,7 @@
   .video-close{
     position:absolute;
     top:8px;right:8px;
-    z-index:10;
+    z-index:10; /* ← z-indexを追加してクリック可能に修正 */
     width:32px;height:32px;
     border-radius:999px;border:none;
     background:rgba(0,0,0,.6);
@@ -325,7 +327,7 @@
     cursor:pointer;
   }
 
-  /* 転記トースト */
+  /* 転記トースト（打ち手検討ツールと同じ出方） */
   .import-toast{
     position:fixed;
     left:50%;
@@ -1147,7 +1149,6 @@
       highlightSyncedFields(syncedInputClasses);
 
       // 自動計算＆スクロール
-      // 内部で updateNextNavUrl() が呼ばれるため、下部ナビもここで確実に連動する
       calc();
       resultArea.scrollIntoView({behavior:'smooth',block:'center'});
     }
