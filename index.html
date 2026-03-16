@@ -155,14 +155,12 @@
     box-shadow:none;border:1px solid #d9eaed;
   }
 
-  /* ▼ 追加：次のステップ用（トーンを合わせたCTA） */
   .btn.next-step{
     background: linear-gradient(180deg, #4f7988, #4b7685);
     box-shadow: 0 8px 20px rgba(35,80,90,.16);
   }
   .btn.next-step:hover{ filter: brightness(1.03); }
   .btn.next-step:active{ filter: brightness(0.98); }
-  /* ▲ 追加ここまで */
 
   .tiny-btn{
     background:#eef7f8;color:#578899;border:1px solid #d9eaed;
@@ -319,7 +317,7 @@
   .video-close{
     position:absolute;
     top:8px;right:8px;
-    z-index:10; /* ← z-indexを追加してクリック可能に修正 */
+    z-index:10;
     width:32px;height:32px;
     border-radius:999px;border:none;
     background:rgba(0,0,0,.6);
@@ -327,7 +325,7 @@
     cursor:pointer;
   }
 
-  /* 転記トースト（打ち手検討ツールと同じ出方） */
+  /* 転記トースト */
   .import-toast{
     position:fixed;
     left:50%;
@@ -453,11 +451,9 @@
 
       <div style="margin-top:20px; padding-top:20px; border-top:1px dashed #d9eaed;">
         <div style="font-size:13px; font-weight:700; color:#578899; margin-bottom:8px;">次のステップ</div>
-        <!-- ▼ 修正：インラインstyleを除去し、トーンを合わせたCTAクラスを適用 -->
         <button id="btnToSaleKit" class="btn next-step" type="button">
           回収するための「打ち手」を検討する ➡
         </button>
-        <!-- ▲ 修正ここまで -->
       </div>
       <div class="note">
         ※ 計算式：<b>御社の売上相当額 ＝ 支出額 ÷（限界利益率 / 100）</b><br>
@@ -714,6 +710,47 @@
       saveAvgPrice();
   });
 
+  // ==========================================
+  // ★ 追加：下部ナビ（次へボタン）にパラメータを連動させる処理
+  // ==========================================
+  function updateNextNavUrl() {
+    const nextBtn = document.getElementById('mk-next');
+    if (!nextBtn || !nextBtn.href || nextBtn.hidden) return;
+
+    const spendVal = digitsOnly(spendEl.value);
+    const cmrVal = cmrInput.value;
+    const avgVal = digitsOnly(avgPriceEl.value);
+
+    if (!spendVal || !cmrVal) return;
+
+    try {
+      const url = new URL(nextBtn.href);
+      url.searchParams.set('mode', 'monthly');
+      url.searchParams.set('spend', spendVal);
+      url.searchParams.set('cmr', cmrVal);
+      if (avgVal) {
+        url.searchParams.set('unit_price', avgVal);
+      } else {
+        url.searchParams.delete('unit_price');
+      }
+      nextBtn.href = url.toString();
+    } catch (e) {}
+  }
+
+  function resetNextNavUrl() {
+    const nextBtn = document.getElementById('mk-next');
+    if (!nextBtn || !nextBtn.href || nextBtn.hidden) return;
+    try {
+      const url = new URL(nextBtn.href);
+      url.searchParams.delete('mode');
+      url.searchParams.delete('spend');
+      url.searchParams.delete('cmr');
+      url.searchParams.delete('unit_price');
+      nextBtn.href = url.toString();
+    } catch (e) {}
+  }
+  // ==========================================
+
   function updateUnits(){
     if(!lastSalesNeeded){
       unitsNeededEl.textContent='—';
@@ -721,6 +758,9 @@
     }
     const avg=parseMoney(avgPriceEl.value);
     unitsNeededEl.textContent=(!isNaN(avg)&&avg>0)?(lastSalesNeeded/avg).toFixed(1):'—';
+
+    // 値が更新されるたびに下部ナビのURLにも反映
+    updateNextNavUrl();
   }
 
   // Determine Context Message Logic
@@ -730,13 +770,10 @@
     let text = "";
       
     if (source === 'jidouka-kouka') {
-      // 自動化（ポジティブ）
       text = "これだけの売上に匹敵する効果です";
     } else if (source === 'time-unit-cost') {
-      // 人件費（成果フォーカス）
       text = "それに見合う成果は出ていますか？";
     } else {
-      // 通常（経費、投資判断） - シンプルな問いかけのみ
       text = "それだけの価値はありますか？";
     }
     return { text };
@@ -761,7 +798,6 @@
     lastSalesNeeded=Math.ceil(spend/rate);
     salesEl.textContent=formatJPY(lastSalesNeeded);
 
-    // URLパラメータからコンテキストを取得して主語を決定
     const urlParams = new URLSearchParams(window.location.search);
     const source = urlParams.get('source');
     let subject = "支出";
@@ -772,27 +808,24 @@
       subject = "人件費コスト";
     }
 
-    // Update statement parts individually to preserve structure
     stmtTop.textContent = `${formatJPY(spend)} の${subject}は、`;
     stmtBottom.textContent = `御社の売上 ${formatJPY(lastSalesNeeded)} に相当します。`;
       
-    // メッセージ表示ロジック
     const { text } = getContextMessage(lastSalesNeeded);
     valueMsgEl.textContent = text;
-    valueMsgEl.className = "value-msg"; // Reset classes
+    valueMsgEl.className = "value-msg";
       
     resultArea.hidden=false;
     avgRow.hidden=false;
     metrics.hidden=false;
     actionRow.classList.add('show');
       
-    // アニメーション発火のために少し遅延
     valueMsgEl.classList.remove('show');
     setTimeout(() => {
         valueMsgEl.classList.add('show');
     }, 50);
 
-    updateUnits();
+    updateUnits(); // 内部で updateNextNavUrl() が呼ばれ、下部ナビも連携される
   }
 
   $('#calc').addEventListener('click',()=>{
@@ -812,22 +845,18 @@
     }
   });
 
-  // ▼ 追加: 打ち手検討ツールへ遷移
+  // ツール内の「打ち手検討を検討する➡」ボタンの処理
   $('#btnToSaleKit').addEventListener('click', ()=>{
     const spendVal = digitsOnly(spendEl.value);
     const cmrVal = cmrInput.value;
-    const avgVal = digitsOnly(avgPriceEl.value); // 平均単価も取得
+    const avgVal = digitsOnly(avgPriceEl.value);
 
     if(!spendVal || !cmrVal){
       alert('数値を入力してから押してください。');
       return;
     }
 
-    // sale-kitへパラメータを渡す
-    // 本番用URL
     let url = `https://takatrp.github.io/sale-kit/?mode=monthly&spend=${spendVal}&cmr=${cmrVal}`;
-    // ローカルテスト用（コメントアウト解除して使用）
-    // let url = `sale-kit.html?mode=monthly&spend=${spendVal}&cmr=${cmrVal}`;
 
     if(avgVal){
       url += `&unit_price=${avgVal}`;
@@ -835,13 +864,12 @@
 
     window.open(url, '_blank');
   });
-  // ▲ 追加ここまで
 
   // copy/reset/print
   $('#copy').addEventListener('click', async ()=>{
     if(resultArea.hidden) return;
     const avgTxt=avgPriceEl.value?`平均単価: ¥${avgPriceEl.value}`:'平均単価: 未入力';
-    const msgTxt = valueMsgEl.textContent.replace('⚠️','').trim(); // アイコン除去
+    const msgTxt = valueMsgEl.textContent.replace('⚠️','').trim();
     const text=
       `御社の売上相当額: ${salesEl.textContent}\n`+
       `${stmtTop.textContent} ${stmtBottom.textContent}\n`+
@@ -875,7 +903,7 @@
     
     lastSalesNeeded=0;
     
-    // 平均単価リセット（localStorageも消去）
+    // 平均単価リセット
     avgPriceEl.value='';
     localStorage.removeItem(STORAGE_KEY_AVG_PRICE);
     localStorage.removeItem(STORAGE_KEY_DATE_AVG);
@@ -890,6 +918,9 @@
     valueMsgEl.classList.remove('show'); 
       
     window.scrollTo({top:0,behavior:'smooth'});
+
+    // ★ 下部ナビのパラメータもクリア
+    resetNextNavUrl();
   });
 
   $('#print').addEventListener('click',()=>{
@@ -1045,7 +1076,6 @@
         spendEl.value = formatPlainJPY(val);
         spendRange.value = clamp(val, +spendRange.min, +spendRange.max);
         syncedInputClasses.push('#field-spend .yen-input');
-          
       }
     }
 
@@ -1064,6 +1094,7 @@
       highlightSyncedFields(syncedInputClasses);
 
       // 自動計算＆スクロール
+      // 内部で updateNextNavUrl() が呼ばれるため、下部ボタンへの連携もここで行われる
       calc();
       resultArea.scrollIntoView({behavior:'smooth',block:'center'});
     }
@@ -1246,3 +1277,5 @@ body{ padding-bottom: calc(62px + env(safe-area-inset-bottom)); }
 <script src="https://takatrp.github.io/tool-portal/mk-nav.js" defer></script>
 </body>
 </html>
+
+
