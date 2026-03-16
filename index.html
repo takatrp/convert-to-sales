@@ -155,14 +155,12 @@
     box-shadow:none;border:1px solid #d9eaed;
   }
 
-  /* ▼ 追加：次のステップ用（トーンを合わせたCTA） */
   .btn.next-step{
     background: linear-gradient(180deg, #4f7988, #4b7685);
     box-shadow: 0 8px 20px rgba(35,80,90,.16);
   }
   .btn.next-step:hover{ filter: brightness(1.03); }
   .btn.next-step:active{ filter: brightness(0.98); }
-  /* ▲ 追加ここまで */
 
   .tiny-btn{
     background:#eef7f8;color:#578899;border:1px solid #d9eaed;
@@ -327,7 +325,7 @@
     cursor:pointer;
   }
 
-  /* 転記トースト（打ち手検討ツールと同じ出方） */
+  /* 転記トースト */
   .import-toast{
     position:fixed;
     left:50%;
@@ -713,9 +711,7 @@
   });
 
   // ==========================================
-  // ★ 修正：下部ナビ（次へボタン）にパラメータを連動させる最強の処理
-  // href だけでなく localStorage(mk_flow) も参照されているため、
-  // 計算結果が出たタイミングで「両方」を上書きします。
+  // ★ 修正：全方位上書きロジック（ボタンhref、URLパラメータ、localStorageのすべてを同期）
   // ==========================================
   function updateNextNavUrl() {
     const nextBtn = document.getElementById('mk-next');
@@ -727,77 +723,92 @@
 
     if (!spendVal || !cmrVal) return;
 
-    // 1. hrefを直接書き換える
+    let targetUrlObj;
     try {
-      if (nextBtn.href && nextBtn.href.includes('sale-kit')) {
-        const url = new URL(nextBtn.href);
-        url.searchParams.set('mode', 'monthly');
-        url.searchParams.set('spend', spendVal);
-        url.searchParams.set('cmr', cmrVal);
-        if (avgVal) {
-          url.searchParams.set('unit_price', avgVal);
-        } else {
-          url.searchParams.delete('unit_price');
-        }
-        nextBtn.href = url.toString();
+      targetUrlObj = new URL(nextBtn.href);
+      // github.io 以外の外部リンクは上書きしない安全対策
+      if (!targetUrlObj.hostname.endsWith('github.io')) return;
+      
+      targetUrlObj.searchParams.set('mode', 'monthly');
+      targetUrlObj.searchParams.set('spend', spendVal);
+      targetUrlObj.searchParams.set('cmr', cmrVal);
+      if (avgVal) {
+        targetUrlObj.searchParams.set('unit_price', avgVal);
+      } else {
+        targetUrlObj.searchParams.delete('unit_price');
       }
-    } catch (e) {}
+    } catch (e) {
+      return;
+    }
 
-    // 2. mk_flow (localStorage) の該当URL要素も書き換える
+    const newNextUrl = targetUrlObj.toString();
+
+    // 1. ボタン自体の href を上書き
+    nextBtn.href = newNextUrl;
+
+    // 2. ブラウザのアドレスバーの ?next= パラメータを上書き
+    try {
+      const currentUrl = new URL(window.location.href);
+      if (currentUrl.searchParams.has('next')) {
+        currentUrl.searchParams.set('next', newNextUrl);
+        window.history.replaceState({}, '', currentUrl.toString());
+      }
+    } catch(e) {}
+
+    // 3. localStorage 'mk_flow' の遷移履歴を上書き
     try {
       const flowStr = localStorage.getItem('mk_flow');
       const idxStr = localStorage.getItem('mk_flow_i');
       if (flowStr && idxStr !== null) {
         const flows = JSON.parse(flowStr);
         const idx = parseInt(idxStr, 10);
-        
-        // 「次の遷移先」が存在し、かつそれが sale-kit への遷移である場合のみ書き換え
-        if (Array.isArray(flows) && idx + 1 < flows.length && flows[idx + 1].includes('sale-kit')) {
-          const nextUrl = new URL(flows[idx + 1]);
-          nextUrl.searchParams.set('mode', 'monthly');
-          nextUrl.searchParams.set('spend', spendVal);
-          nextUrl.searchParams.set('cmr', cmrVal);
-          if (avgVal) {
-            nextUrl.searchParams.set('unit_price', avgVal);
-          } else {
-            nextUrl.searchParams.delete('unit_price');
-          }
-          flows[idx + 1] = nextUrl.toString();
+        if (Array.isArray(flows) && idx + 1 < flows.length) {
+          flows[idx + 1] = newNextUrl;
           localStorage.setItem('mk_flow', JSON.stringify(flows));
         }
       }
     } catch (e) {}
   }
 
-  // リセット時のパラメータ消去処理
   function resetNextNavUrl() {
     const nextBtn = document.getElementById('mk-next');
     if (!nextBtn) return;
     
+    let targetUrlObj;
     try {
-      if (nextBtn.href && nextBtn.href.includes('sale-kit')) {
-        const url = new URL(nextBtn.href);
-        url.searchParams.delete('mode');
-        url.searchParams.delete('spend');
-        url.searchParams.delete('cmr');
-        url.searchParams.delete('unit_price');
-        nextBtn.href = url.toString();
-      }
-    } catch (e) {}
+      targetUrlObj = new URL(nextBtn.href);
+      if (!targetUrlObj.hostname.endsWith('github.io')) return;
+      targetUrlObj.searchParams.delete('mode');
+      targetUrlObj.searchParams.delete('spend');
+      targetUrlObj.searchParams.delete('cmr');
+      targetUrlObj.searchParams.delete('unit_price');
+    } catch(e) {
+      return;
+    }
 
+    const newNextUrl = targetUrlObj.toString();
+
+    // 1.
+    nextBtn.href = newNextUrl;
+
+    // 2.
+    try {
+      const currentUrl = new URL(window.location.href);
+      if (currentUrl.searchParams.has('next')) {
+        currentUrl.searchParams.set('next', newNextUrl);
+        window.history.replaceState({}, '', currentUrl.toString());
+      }
+    } catch(e) {}
+
+    // 3.
     try {
       const flowStr = localStorage.getItem('mk_flow');
       const idxStr = localStorage.getItem('mk_flow_i');
       if (flowStr && idxStr !== null) {
         const flows = JSON.parse(flowStr);
         const idx = parseInt(idxStr, 10);
-        if (Array.isArray(flows) && idx + 1 < flows.length && flows[idx + 1].includes('sale-kit')) {
-          const nextUrl = new URL(flows[idx + 1]);
-          nextUrl.searchParams.delete('mode');
-          nextUrl.searchParams.delete('spend');
-          nextUrl.searchParams.delete('cmr');
-          nextUrl.searchParams.delete('unit_price');
-          flows[idx + 1] = nextUrl.toString();
+        if (Array.isArray(flows) && idx + 1 < flows.length) {
+          flows[idx + 1] = newNextUrl;
           localStorage.setItem('mk_flow', JSON.stringify(flows));
         }
       }
@@ -813,7 +824,7 @@
     const avg=parseMoney(avgPriceEl.value);
     unitsNeededEl.textContent=(!isNaN(avg)&&avg>0)?(lastSalesNeeded/avg).toFixed(1):'—';
 
-    // 値が更新されるたびに下部ナビ（次へボタンとlocalStorage）にも反映
+    // 値が更新されるたびに下部ナビ（3箇所すべて）にも反映
     updateNextNavUrl();
   }
 
@@ -879,7 +890,7 @@
         valueMsgEl.classList.add('show');
     }, 50);
 
-    // updateUnits 内部で下部ナビのURLとlocalStorageの更新が行われる
+    // updateUnits() 内部で updateNextNavUrl() が呼ばれるため同期処理が実行される
     updateUnits(); 
   }
 
