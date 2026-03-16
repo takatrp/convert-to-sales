@@ -155,14 +155,12 @@
     box-shadow:none;border:1px solid #d9eaed;
   }
 
-  /* ▼ 追加：次のステップ用（トーンを合わせたCTA） */
   .btn.next-step{
     background: linear-gradient(180deg, #4f7988, #4b7685);
     box-shadow: 0 8px 20px rgba(35,80,90,.16);
   }
   .btn.next-step:hover{ filter: brightness(1.03); }
   .btn.next-step:active{ filter: brightness(0.98); }
-  /* ▲ 追加ここまで */
 
   .tiny-btn{
     background:#eef7f8;color:#578899;border:1px solid #d9eaed;
@@ -319,7 +317,7 @@
   .video-close{
     position:absolute;
     top:8px;right:8px;
-    z-index:10; /* ← z-indexを追加してクリック可能に修正 */
+    z-index:10;
     width:32px;height:32px;
     border-radius:999px;border:none;
     background:rgba(0,0,0,.6);
@@ -327,7 +325,7 @@
     cursor:pointer;
   }
 
-  /* 転記トースト（打ち手検討ツールと同じ出方） */
+  /* 転記トースト */
   .import-toast{
     position:fixed;
     left:50%;
@@ -453,11 +451,9 @@
 
       <div style="margin-top:20px; padding-top:20px; border-top:1px dashed #d9eaed;">
         <div style="font-size:13px; font-weight:700; color:#578899; margin-bottom:8px;">次のステップ</div>
-        <!-- ▼ 修正：インラインstyleを除去し、トーンを合わせたCTAクラスを適用 -->
         <button id="btnToSaleKit" class="btn next-step" type="button">
           回収するための「打ち手」を検討する ➡
         </button>
-        <!-- ▲ 修正ここまで -->
       </div>
       <div class="note">
         ※ 計算式：<b>御社の売上相当額 ＝ 支出額 ÷（限界利益率 / 100）</b><br>
@@ -715,14 +711,13 @@
   });
 
   // ==========================================
-  // ★ 追加：下部ナビ（次へボタン）クリック時にパラメータを付与して遷移（横取り処理）
+  // ★ 修正：下部ナビ（次へボタン）にパラメータを連動させる最強の処理
+  // href だけでなく localStorage(mk_flow) も参照されているため、
+  // 計算結果が出たタイミングで「両方」を上書きします。
   // ==========================================
-  document.addEventListener('click', (e) => {
-    const mkNextBtn = e.target.closest('#mk-next');
-    if (!mkNextBtn) return;
-
-    // 計算が実行されていない場合はパラメータ付与を行わない
-    if (resultArea.hidden) return;
+  function updateNextNavUrl() {
+    const nextBtn = document.getElementById('mk-next');
+    if (!nextBtn) return;
 
     const spendVal = digitsOnly(spendEl.value);
     const cmrVal = cmrInput.value;
@@ -730,21 +725,82 @@
 
     if (!spendVal || !cmrVal) return;
 
+    // 1. hrefを直接書き換える
     try {
-      const url = new URL(mkNextBtn.href);
-      url.searchParams.set('mode', 'monthly');
-      url.searchParams.set('spend', spendVal);
-      url.searchParams.set('cmr', cmrVal);
-      if (avgVal) {
-        url.searchParams.set('unit_price', avgVal);
-      } else {
-        url.searchParams.delete('unit_price');
+      if (nextBtn.href && nextBtn.href.includes('sale-kit')) {
+        const url = new URL(nextBtn.href);
+        url.searchParams.set('mode', 'monthly');
+        url.searchParams.set('spend', spendVal);
+        url.searchParams.set('cmr', cmrVal);
+        if (avgVal) {
+          url.searchParams.set('unit_price', avgVal);
+        } else {
+          url.searchParams.delete('unit_price');
+        }
+        nextBtn.href = url.toString();
       }
-      
-      // クリックされた瞬間に href を上書きし、その後の遷移プロセスには干渉しない（素通しさせる）
-      mkNextBtn.href = url.toString();
-    } catch (err) {}
-  }, true); // キャプチャリングフェーズで一番最初にイベントを捕捉する
+    } catch (e) {}
+
+    // 2. mk_flow (localStorage) の該当URL要素も書き換える
+    try {
+      const flowStr = localStorage.getItem('mk_flow');
+      const idxStr = localStorage.getItem('mk_flow_i');
+      if (flowStr && idxStr !== null) {
+        const flows = JSON.parse(flowStr);
+        const idx = parseInt(idxStr, 10);
+        
+        // 「次の遷移先」が存在し、かつそれが sale-kit への遷移である場合のみ書き換え
+        if (Array.isArray(flows) && idx + 1 < flows.length && flows[idx + 1].includes('sale-kit')) {
+          const nextUrl = new URL(flows[idx + 1]);
+          nextUrl.searchParams.set('mode', 'monthly');
+          nextUrl.searchParams.set('spend', spendVal);
+          nextUrl.searchParams.set('cmr', cmrVal);
+          if (avgVal) {
+            nextUrl.searchParams.set('unit_price', avgVal);
+          } else {
+            nextUrl.searchParams.delete('unit_price');
+          }
+          flows[idx + 1] = nextUrl.toString();
+          localStorage.setItem('mk_flow', JSON.stringify(flows));
+        }
+      }
+    } catch (e) {}
+  }
+
+  // リセット時のパラメータ消去処理
+  function resetNextNavUrl() {
+    const nextBtn = document.getElementById('mk-next');
+    if (!nextBtn) return;
+    
+    try {
+      if (nextBtn.href && nextBtn.href.includes('sale-kit')) {
+        const url = new URL(nextBtn.href);
+        url.searchParams.delete('mode');
+        url.searchParams.delete('spend');
+        url.searchParams.delete('cmr');
+        url.searchParams.delete('unit_price');
+        nextBtn.href = url.toString();
+      }
+    } catch (e) {}
+
+    try {
+      const flowStr = localStorage.getItem('mk_flow');
+      const idxStr = localStorage.getItem('mk_flow_i');
+      if (flowStr && idxStr !== null) {
+        const flows = JSON.parse(flowStr);
+        const idx = parseInt(idxStr, 10);
+        if (Array.isArray(flows) && idx + 1 < flows.length && flows[idx + 1].includes('sale-kit')) {
+          const nextUrl = new URL(flows[idx + 1]);
+          nextUrl.searchParams.delete('mode');
+          nextUrl.searchParams.delete('spend');
+          nextUrl.searchParams.delete('cmr');
+          nextUrl.searchParams.delete('unit_price');
+          flows[idx + 1] = nextUrl.toString();
+          localStorage.setItem('mk_flow', JSON.stringify(flows));
+        }
+      }
+    } catch (e) {}
+  }
   // ==========================================
 
   function updateUnits(){
@@ -754,6 +810,9 @@
     }
     const avg=parseMoney(avgPriceEl.value);
     unitsNeededEl.textContent=(!isNaN(avg)&&avg>0)?(lastSalesNeeded/avg).toFixed(1):'—';
+
+    // 値が更新されるたびに下部ナビ（次へボタンとlocalStorage）にも反映
+    updateNextNavUrl();
   }
 
   // Determine Context Message Logic
@@ -818,7 +877,8 @@
         valueMsgEl.classList.add('show');
     }, 50);
 
-    updateUnits();
+    // updateUnits 内部で下部ナビのURLとlocalStorageの更新が行われる
+    updateUnits(); 
   }
 
   $('#calc').addEventListener('click',()=>{
@@ -911,6 +971,9 @@
     valueMsgEl.classList.remove('show'); 
       
     window.scrollTo({top:0,behavior:'smooth'});
+
+    // ★ 下部ナビのパラメータもクリア
+    resetNextNavUrl();
   });
 
   $('#print').addEventListener('click',()=>{
@@ -1084,6 +1147,7 @@
       highlightSyncedFields(syncedInputClasses);
 
       // 自動計算＆スクロール
+      // 内部で updateNextNavUrl() が呼ばれるため、下部ナビもここで確実に連動する
       calc();
       resultArea.scrollIntoView({behavior:'smooth',block:'center'});
     }
